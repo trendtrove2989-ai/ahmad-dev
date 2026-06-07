@@ -1908,10 +1908,13 @@
                     </>
                   ) : (
                     <div className="project-frame">
-                      <img 
-                        src={encodeURI(`/visuals/images/project ${projectIdx + 1}/project ${projectIdx + 1} detail 1.png`)}
-                        alt={`Project ${projectIdx + 1}`} 
+                      <video 
+                        src={`/visuals/vedios/${projectIdx}.mp4`} 
                         className="project-img"
+                        autoPlay 
+                        loop 
+                        muted 
+                        playsInline
                       />
                       <button 
                         className="view-details-btn"
