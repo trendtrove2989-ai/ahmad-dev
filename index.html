@@ -1983,7 +1983,7 @@
 
           {/* --- PROJECT DETAIL OVERLAY --- */}
           {detailOpen && activeDetailProject !== null && (() => {
-            const detailData = PROJECT_DETAILS[activeDetailProject - 1] || PROJECT_DETAILS[0];
+            const detailData = PROJECT_DETAILS[activeDetailProject] || PROJECT_DETAILS[0];
             const projectNum = activeDetailProject + 1;
             const mediaSrc = encodeURI(`/visuals/images/project ${projectNum}/project ${projectNum} detail 1.png`);
             return (
@@ -2026,7 +2026,13 @@
                   <div className="project-detail-page">
                     <div className="project-detail-hero">
                       <div className="project-detail-media-wrap">
-                        <img src={mediaSrc} alt={detailData.name} />
+                        <video 
+                          src={`/visuals/vedios/${activeDetailProject}.mp4`} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                        />
                       </div>
                       {detailData.showVisitSite !== false && (
                         <a
