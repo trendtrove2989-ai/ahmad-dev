@@ -1885,8 +1885,7 @@
                       <div className="media-grid-wrapper">
                         <div className="media-grid">
                         {Array.from({ length: 24 }).map((_, i) => {
-                          const baseGithubUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals";
-                          const videoSrc = `${baseGithubUrl}/vedios/${(i % 10) + 1}.mp4`;
+                          const videoSrc = `/visuals/vedios/${(i % 10) + 1}.mp4`;
                           return (
                             <div className="grid-item" key={i}>
                               <video src={videoSrc} autoPlay={true} loop={true} muted={true} playsInline={true} />
@@ -1910,7 +1909,7 @@
                   ) : (
                     <div className="project-frame">
                       <img 
-                        src={encodeURI(`https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals/images/project ${projectIdx + 1}/project ${projectIdx + 1} detail 1.png`)} 
+                        src={encodeURI(`/visuals/images/project ${projectIdx + 1}/project ${projectIdx + 1} detail 1.png`)}
                         alt={`Project ${projectIdx + 1}`} 
                         className="project-img"
                       />
@@ -1982,9 +1981,8 @@
           {/* --- PROJECT DETAIL OVERLAY --- */}
           {detailOpen && activeDetailProject !== null && (() => {
             const detailData = PROJECT_DETAILS[activeDetailProject - 1] || PROJECT_DETAILS[0];
-            const githubVisualsUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals";
             const projectNum = activeDetailProject + 1;
-            const mediaSrc = encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 1.png`);
+            const mediaSrc = encodeURI(`/visuals/images/project ${projectNum}/project ${projectNum} detail 1.png`);
             return (
               <div className={`project-detail-overlay active ${detailExpanded ? 'expanded' : ''}`}>
                 <div className="project-detail-header">
@@ -2048,13 +2046,13 @@
                       </div>
                       <div className="project-detail-about-images">
                         <div className="about-img-card">
-                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 1.png`)} alt={`Project ${projectNum} Detail 1`} />
+                          <img src={encodeURI(`/visuals/images/project ${projectNum}/project ${projectNum} detail 1.png`)} alt={`Project ${projectNum} Detail 1`} />
                         </div>
                         <div className="about-img-card">
-                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 2.png`)} alt={`Project ${projectNum} Detail 2`} />
+                          <img src={encodeURI(`/visuals/images/project ${projectNum}/project ${projectNum} detail 2.png`)} alt={`Project ${projectNum} Detail 2`} />
                         </div>
                         <div className="about-img-card">
-                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 3.png`)} alt={`Project ${projectNum} Detail 3`} />
+                          <img src={encodeURI(`/visuals/images/project ${projectNum}/project ${projectNum} detail 3.png`)} alt={`Project ${projectNum} Detail 3`} />
                         </div>
                       </div>
                     </div>
