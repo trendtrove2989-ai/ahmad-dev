@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ahmad's Portfolio</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "three": "https://esm.sh/three@0.160.0",
+        "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.12?external=react,react-dom,three",
+        "@studio-freight/lenis": "https://esm.sh/@studio-freight/lenis@1.0.39"
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --brand-yellow: #FFC700;
+      --bg-color: #000000;
+      --text-main: var(--brand-yellow);
+      --text-secondary: var(--brand-yellow);
+      --nav-bg: rgba(255, 255, 255, 0.1);
+      --nav-border: rgba(255, 255, 255, 0.2);
+    }
+
+    [data-theme="light"] {
+      --bg-color: var(--brand-yellow);
+      --text-main: #000000;
+      --text-secondary: #000000;
+      --nav-bg: rgba(0, 0, 0, 0.1);
+      --nav-border: rgba(0, 0, 0, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #050505;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      cursor: default; 
+      user-select: none;
+    }
+
+    .r3f-container {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    }
+
+    .layout-wrapper {
+      position: relative; z-index: 10;
+      width: 100vw; height: 100vh;
+      background-color: var(--bg-color);
+      transition: background-color 0.4s ease;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+
+    header {
+      position: fixed; /* Changed from absolute to fixed */
+      top: 30px; left: 0; width: 100%;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 40px; z-index: 100;
+    }
+
+    .github-logo {
+      width: 50px; height: 50px; border-radius: 50%;
+      background: var(--text-secondary); color: var(--bg-color);
+      display: flex; align-items: center; justify-content: center;
+      transition: 0.4s;
+    }
+    .github-logo svg { width: 30px; height: 30px; fill: var(--bg-color); transition: 0.4s; }
+    [data-theme="light"] .github-logo svg { fill: var(--brand-yellow); }
+
+    nav {
+      background: var(--nav-bg); border: 1px solid var(--nav-border);
+      padding: 12px 35px; border-radius: 50px;
+      backdrop-filter: blur(8px); display: flex; gap: 30px;
+    }
+    nav a {
+      color: var(--text-secondary); text-decoration: none; font-size: 13px;
+      letter-spacing: 1.5px; font-weight: 600; transition: color 0.4s; cursor: pointer;
+    }
+
+    .theme-switch {
+      background: var(--nav-bg); border: 1px solid var(--nav-border);
+      padding: 8px 12px; border-radius: 30px;
+      display: flex; align-items: center; gap: 15px; cursor: pointer;
+      backdrop-filter: blur(8px); transition: 0.4s;
+    }
+    .theme-switch svg { width: 18px; height: 18px; fill: var(--text-secondary); opacity: 0.5; transition: 0.3s; }
+    .theme-switch .active svg { opacity: 1; fill: var(--brand-yellow); }
+    [data-theme="light"] .theme-switch .active svg { fill: #000; }
+
+    .hero-text {
+      font-family: 'Anton', sans-serif;
+      font-size: 13vw;
+      color: var(--text-main);
+      text-transform: uppercase;
+      line-height: 0.8;
+      text-align: center;
+      position: absolute; top: 45%; left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      z-index: 15; 
+      transition: color 0.4s ease;
+    }
+
+    .person-img {
+      position: absolute; bottom: 0; left: 50%;
+      transform: translateX(-50%);
+      height: 75vh;
+      object-fit: contain;
+      z-index: 10000; 
+      pointer-events: none;
+    }
+
+    .socials {
+      position: absolute; left: 40px; bottom: 40px;
+      display: flex; flex-direction: column; gap: 22px; z-index: 100;
+    }
+    .socials svg { width: 22px; height: 22px; fill: var(--text-secondary); transition: 0.4s; cursor: pointer;}
+
+    .glitch-wrapper {
+      position: absolute; right: 40px; bottom: 40px;
+      font-family: 'Inter', sans-serif; font-weight: 600;
+      font-size: 18px; letter-spacing: 2px;
+      color: var(--text-secondary); z-index: 100;
+      transition: color 0.4s; text-transform: uppercase;
+    }
+    .glitch { position: relative; display: inline-block; }
+    .glitch::before, .glitch::after {
+      content: attr(data-text); position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%; background: transparent; color: var(--text-secondary);
+      opacity: 0;
+    }
+    .glitch.active::before {
+      left: 3px; text-shadow: -2px 0 red; opacity: 1;
+      animation: glitch-anim 0.2s infinite linear alternate-reverse;
+    }
+    .glitch.active::after {
+      left: -3px; text-shadow: -2px 0 blue; opacity: 1;
+      animation: glitch-anim-2 0.3s infinite linear alternate-reverse;
+    }
+
+    @keyframes glitch-anim {
+      0% { clip-path: inset(20% 0 80% 0); }
+      50% { clip-path: inset(60% 0 10% 0); }
+      100% { clip-path: inset(40% 0 40% 0); }
+    }
+    @keyframes glitch-anim-2 {
+      0% { clip-path: inset(10% 0 60% 0); }
+      50% { clip-path: inset(80% 0 5% 0); }
+      100% { clip-path: inset(30% 0 20% 0); }
+    }
+
+    .venom-wrapper {
+      position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+      mix-blend-mode: difference; 
+    }
+    .venom-goo-container {
+      width: 100%; height: 100%;
+      filter: url('#venom-goo');
+    }
+    canvas { width: 100vw; height: 100vh; display: block; }
+
+    .shutter-container {
+      position: fixed;
+      inset: 0;
+      z-index: 15000;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .shutter-panel {
+      width: 100vw;
+      height: 100vh;
+      background: rgba(255, 204, 0, 0.985); 
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      transform: translateY(100%);
+      transition: transform 0.5s ease;
+      position: relative;
+      pointer-events: auto;
+    }
+
+    [data-theme="light"] .shutter-panel {
+      background: rgba(0, 0, 0, 0.95);
+    }
+
+    .work-btn {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.25);
+      color: var(--text-secondary);
+      padding: 12px 30px;
+      border-radius: 40px; 
+      font-weight: 600;
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: auto; 
+    }
+
+    .work-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateX(-50%) scale(1.05);
+    }
+
+    [data-theme="light"] .work-btn {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.3);
+      color: #000;
+    }
+
+    .shutter-container.phase-1 .shutter-panel {
+      transform: translateY(82%);
+    }
+    .shutter-container.phase-1 .work-btn { opacity: 1; }
+    
+    .shutter-container.phase-2 .shutter-panel,
+    .shutter-container.phase-4 .shutter-panel {
+      transform: translateY(0%);
+      transition: transform 1.8s cubic-bezier(0.1, 0.95, 0.2, 1);
+    }
+    .shutter-container.phase-2 .work-btn,
+    .shutter-container.phase-4 .work-btn { 
+      opacity: 0; 
+      pointer-events: none; 
+    }
+    
+    .shutter-container.phase-3 .shutter-panel {
+      transform: translateY(-100%);
+      transition: transform 1.8s cubic-bezier(0.8, 0, 0.9, 0.1);
+    }
+
+    .work-page {
+      position: absolute;
+      inset: 0;
+      z-index: 14000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-color);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0s;
+    }
+    
+    .work-page.active { opacity: 1; pointer-events: auto; }
+
+    /* --- NEW WORK PAGE CENTER CONTENT --- */
+    .work-center-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 15;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 40px;
+      pointer-events: none; /* Allows hovering videos, but button re-enables it */
+    }
+
+    .welcome-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 8vw;
+      color: #ffffff;
+      margin: 0;
+      letter-spacing: 6px;
+      line-height: 1;
+      text-transform: uppercase;
+      text-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    }
+
+    .glass-magnify-btn {
+      pointer-events: auto;
+      width: 260px;
+      height: 75px;
+      border-radius: 40px; 
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.5), 
+        inset 0 0 20px rgba(255, 255, 255, 0.2);
+      /* Backdrop filter sets the base for the glass look */
+      backdrop-filter: blur(4px) brightness(1.2) contrast(1.1); 
+      -webkit-backdrop-filter: blur(4px) brightness(1.2) contrast(1.1);
+      color: #ffffff;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      letter-spacing: 3px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .glass-magnify-btn:hover {
+      transform: scale(1.05);
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.6), 
+        inset 0 0 30px rgba(255, 255, 255, 0.4);
+    }
+    /* ----------------------------------- */
+
+    .media-grid-wrapper {
+      position: absolute;
+      inset: -5%; 
+      width: 110%;
+      height: 110%;
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #050505; 
+      overflow: hidden;
+    }
+
+    .media-grid-wrapper::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 5;
+      background: linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.98) 0%,
+        rgba(0,0,0,0.7) 15%,
+        rgba(0,0,0,0) 50%,
+        rgba(0,0,0,0.7) 85%,
+        rgba(0,0,0,0.98) 100%
+      );
+    }
+
+    .media-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px; 
+      width: 100vw;
+      height: auto;
+      padding: 0 2vw;
+      align-content: center;
+      justify-content: center;
+      transform: scale(1.05);
+    }
+
+    .grid-item {
+      height: 23vh; 
+      border-radius: 12px;
+      overflow: hidden;
+      background: #1a1a1a;
+      flex-grow: 1; 
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.8), 0 8px 15px rgba(0,0,0,0.9);
+    }
+
+    .grid-item:nth-child(7n + 1) { width: 22%; }
+    .grid-item:nth-child(7n + 2) { width: 35%; }
+    .grid-item:nth-child(7n + 3) { width: 12%; }
+    .grid-item:nth-child(7n + 4) { width: 22%; }
+    .grid-item:nth-child(7n + 5) { width: 35%; }
+    .grid-item:nth-child(7n + 6) { width: 12%; }
+    .grid-item:nth-child(7n + 7) { width: 28%; }
+
+    .grid-item video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(1.5px) brightness(0.65); 
+      transform: scale(1.05); 
+    }
+
+    .work-header { 
+      position: absolute; 
+      top: 30px; 
+      left: 0; 
+      width: 100%; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 0 40px; 
+      z-index: 15000; 
+    }
+    .work-header nav a { color: #fff !important; text-shadow: none !important; }
+    .work-header .github-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .work-header .github-logo svg { fill: #fff !important; filter: none !important; }
+    .work-header nav, .work-header .theme-switch { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.2) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; }
+    .work-header .theme-switch svg { fill: #fff !important; opacity: 0.6; filter: none !important; }
+    .work-header .theme-switch .active svg { fill: #fff !important; opacity: 1; filter: none !important; }
+    /* --- ZOOM OUT CAROUSEL STYLES --- */
+    .work-zoom-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 16000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+      background: transparent;
+    }
+    
+    .work-zoom-ui.active {
+      opacity: 1;
+      pointer-events: none; /* Allows clicks to pass through to the header */
+    }
+
+    .work-content-scaler {
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      transform-origin: center;
+      transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.8s ease, box-shadow 0.8s ease;
+      overflow: hidden;
+      background: var(--bg-color);
+    }
+
+    /* --- ENHANCED GLASS PANE OVERLAY --- */
+    .work-content-scaler::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      z-index: 100;
+      /* CHANGED TO BLACK: Inner rim and shadows are now dark to create depth */
+      box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.7), 
+                  inset 0 0 50px rgba(0, 0, 0, 0.6),
+                  inset 20px 20px 80px rgba(0, 0, 0, 0.4);
+      /* Softened the diagonal light reflection so the black shadow stands out more */
+      background: linear-gradient(
+        135deg, 
+        rgba(255, 255, 255, 0.1) 0%, 
+        rgba(255, 255, 255, 0.02) 20%, 
+        rgba(255, 255, 255, 0) 50%, 
+        rgba(255, 255, 255, 0.01) 80%,
+        rgba(255, 255, 255, 0.08) 100%
+      );
+    }
+    
+    .work-content-scaler.zoomed-out {
+      transform: scale(0.55);
+      border-radius: 30px; 
+      
+      /* SOFTER, LESS INTENSE WHITE SHADOW: Tighter blur and lower opacity */
+      box-shadow: 0 0 25px rgba(255, 255, 255, 0.05), 
+                  0 15px 35px rgba(255, 255, 255, 0.08), 
+                  0 0 0 1px rgba(255, 255, 255, 0.15);
+      pointer-events: none; 
+    }
+
+    .work-content-scaler.zoomed-out::after {
+      opacity: 1;
+    }
+
+    .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 13600;
+      transition: 0.3s;
+      pointer-events: auto; /* Re-enables clicks specifically for the arrows */
+    }
+    .carousel-arrow svg { fill: #fff; width: 24px; height: 24px; }
+    .carousel-arrow:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-50%) scale(1.1); }
+    .carousel-arrow.left { left: 4%; }
+    .carousel-arrow.right { right: 4%; }
+
+    .ticker-container {
+      position: absolute;
+      bottom: 8%;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      height: 40px;
+      z-index: 13600;
+    }
+    .ticker-bar {
+      width: 3px;
+      background: rgba(255, 255, 255, 1);
+      border-radius: 2px;
+      transition: all 0.2s ease;
+    }
+    .ticker-bar.active { background: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.8); }
+
+    .project-frame {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #050505;
+      overflow: hidden;
+      pointer-events: auto;
+    }
+    
+    .project-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: all 0.4s ease;
+    }
+    
+    .project-frame:hover .project-img {
+      filter: blur(8px) brightness(0.3);
+      transform: scale(1.05);
+    }
+    
+    .view-details-btn {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      width: 220px;
+      height: 60px;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px) brightness(1.2);
+      -webkit-backdrop-filter: blur(8px) brightness(1.2);
+      color: #ffffff;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+    
+    .project-frame:hover .view-details-btn {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .view-details-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    /* --- PROJECT DETAIL OVERLAY --- */
+    .project-detail-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      background: #000000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .project-detail-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .project-detail-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 40px;
+      z-index: 20002;
+      pointer-events: none;
+    }
+
+    .project-detail-back-btn {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .project-detail-back-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.03);
+    }
+
+    .project-detail-back-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: #ffffff;
+    }
+
+    .project-detail-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(2.2rem, 5.5vw, 4.5rem);
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .project-detail-header-links {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .project-detail-header-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      color: #ffffff;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .project-detail-header-link.github {
+      border-radius: 50%;
+    }
+
+    .project-detail-header-link:hover {
+      transform: scale(1.1);
+      opacity: 0.85;
+    }
+
+    .project-detail-header-link svg {
+      width: 28px;
+      height: 28px;
+      fill: #ffffff;
+    }
+
+    .project-detail-robot-bottom {
+      position: fixed;
+      right: 40px;
+      bottom: 36px;
+      z-index: 20002;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease 0.5s;
+    }
+
+    .project-detail-overlay.expanded .project-detail-robot-bottom {
+      opacity: 1;
+    }
+
+    .project-detail-robot-bottom svg {
+      width: 40px;
+      height: 40px;
+      stroke: #ffffff;
+      fill: none;
+    }
+
+    .project-detail-hero {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      width: 100%;
+    }
+
+    .project-detail-visit-btn {
+      pointer-events: auto;
+      padding: 14px 32px;
+      border-radius: 40px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px) brightness(1.2);
+      -webkit-backdrop-filter: blur(8px) brightness(1.2);
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .project-detail-overlay.expanded .project-detail-visit-btn {
+      opacity: 1;
+      transform: translateY(0);
+      transition-delay: 0.35s;
+    }
+
+    .project-detail-visit-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      transform: scale(1.05);
+    }
+
+    .project-detail-scroll {
+      height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .project-detail-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .project-detail-page {
+      height: 100vh;
+      scroll-snap-align: start;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 110px 50px 50px;
+      box-sizing: border-box;
+    }
+
+    .project-detail-media-wrap {
+      width: 78%;
+      max-width: 1300px;
+      aspect-ratio: 16 / 9;
+      border-radius: 50px;
+      overflow: hidden;
+      background: #0a0a0a;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8);
+      transform: scale(0.52);
+      opacity: 0;
+      transition: transform 1s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  border-radius 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .project-detail-overlay.expanded .project-detail-media-wrap {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .project-detail-media-wrap img,
+    .project-detail-media-wrap video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .project-detail-text-page {
+      max-width: 800px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease 0.15s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+    }
+
+    .project-detail-overlay.expanded .project-detail-text-page {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* --- NEW ABOUT PROJECT PAGE --- */
+    .project-detail-about-page {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s ease 0.15s, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s;
+      padding: 0 40px;
+    }
+    .project-detail-overlay.expanded .project-detail-about-page {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .project-detail-about-content {
+      flex: 1;
+      text-align: left;
+      padding-right: 60px;
+    }
+    .project-detail-about-title {
+      font-family: 'Anton', sans-serif;
+      font-size: clamp(3.5rem, 6vw, 5.5rem);
+      color: rgba(255, 255, 255, 0.88);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 30px;
+      line-height: 1;
+    }
+    .project-detail-about-text {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: clamp(1rem, 1.4vw, 1.2rem);
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.8;
+      max-width: 600px;
+    }
+    .project-detail-about-images {
+      flex: 1;
+      position: relative;
+      height: 550px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .about-img-card {
+      position: absolute;
+      width: 320px;
+      height: 480px;
+      border-radius: 30px;
+      background: #1a1a1a;
+      box-shadow: -20px 20px 40px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.15);
+      overflow: hidden;
+      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+    .about-img-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .about-img-card:nth-child(1) {
+      transform: rotate(-35deg) translate(-140px, 40px);
+      z-index: 1;
+      filter: brightness(0.6);
+    }
+    .about-img-card:nth-child(2) {
+      transform: rotate(-20deg) translate(-70px, 20px);
+      z-index: 2;
+      filter: brightness(0.85);
+    }
+    .about-img-card:nth-child(3) {
+      transform: rotate(-5deg) translate(0, 0);
+      z-index: 3;
+      filter: brightness(1);
+    }
+    .project-detail-about-images:hover .about-img-card:nth-child(1) {
+      transform: rotate(-42deg) translate(-180px, 50px);
+    }
+    .project-detail-about-images:hover .about-img-card:nth-child(2) {
+      transform: rotate(-25deg) translate(-90px, 25px);
+    }
+    .project-detail-about-images:hover .about-img-card:nth-child(3) {
+      transform: rotate(-5deg) translate(15px, -10px);
+    }
+
+    .project-detail-section-label {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      color: #ffffff;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .project-detail-section-body {
+      font-family: 'Inter', sans-serif;
+      font-weight: 400;
+      font-size: clamp(1rem, 1.6vw, 1.2rem);
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.8;
+      letter-spacing: 0.5px;
+    }
+
+    .project-detail-page-indicator {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 20002;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease 0.5s;
+    }
+
+    .project-detail-overlay.expanded .project-detail-page-indicator {
+      opacity: 1;
+    }
+
+    .project-detail-dot {
+      width: 3px;
+      height: 24px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.25);
+      transition: all 0.3s ease;
+    }
+
+    .project-detail-dot.active {
+      height: 36px;
+      background: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+    }
+    /* --- CONTACT PAGE STYLES --- */
+    .contact-page {
+      position: absolute;
+      inset: 0;
+      z-index: 14000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-color);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0s;
+    }
+    .contact-page.active { opacity: 1; pointer-events: auto; }
+
+    .contact-shutter-container {
+      position: fixed;
+      inset: 0;
+      z-index: 15000;
+      pointer-events: none;
+      display: flex;
+      align-items: flex-end;
+    }
+    
+    .contact-shutter-container.phase-1 .shutter-panel { transform: translateY(82%); }
+    .contact-shutter-container.phase-1 .work-btn { opacity: 1; }
+    
+    .contact-shutter-container.phase-2 .shutter-panel,
+    .contact-shutter-container.phase-4 .shutter-panel {
+      transform: translateY(0%);
+      transition: transform 1.8s cubic-bezier(0.1, 0.95, 0.2, 1);
+    }
+    .contact-shutter-container.phase-2 .work-btn,
+    .contact-shutter-container.phase-4 .work-btn { opacity: 0; pointer-events: none; }
+    
+    .contact-shutter-container.phase-3 .shutter-panel {
+      transform: translateY(-100%);
+      transition: transform 1.8s cubic-bezier(0.8, 0, 0.9, 0.1);
+    }
+
+    .contact-flip-container {
+      perspective: 1000px;
+      width: 400px;
+      height: 540px;
+      z-index: 10;
+    }
+    .contact-flip-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+    .contact-flip-container:hover .contact-flip-inner {
+      transform: rotateY(180deg);
+    }
+    .contact-flip-front, .contact-flip-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px) brightness(1.2);
+      -webkit-backdrop-filter: blur(15px) brightness(1.2);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .contact-flip-front {
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+    .contact-flip-front h2 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 32px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin: 0;
+    }
+    .contact-flip-front p {
+      position: absolute;
+      bottom: 30px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0.8;
+      text-transform: uppercase;
+    }
+
+    .contact-flip-back {
+      transform: rotateY(180deg);
+      padding: 40px;
+      align-items: flex-start;
+      color: #fff;
+    }
+    .contact-flip-back h2 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 2px;
+      margin-bottom: 30px;
+      text-transform: uppercase;
+      align-self: center;
+    }
+    .contact-form-group {
+      width: 100%;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    .contact-form-group label {
+      display: block;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .contact-form-group input, .contact-form-group textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .contact-form-group input:focus, .contact-form-group textarea:focus {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.5);
+    }
+    .contact-form-group textarea {
+      height: 100px;
+      resize: none;
+    }
+
+    .glassy-submit-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .glassy-submit-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .shutter-loading-container {
+      position: fixed;
+      top: 50vh;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 16000;
+    }
+    .shutter-loading-container.active {
+      opacity: 1;
+    }
+    .shutter-loading-text {
+      font-family: 'Anton', sans-serif;
+      font-size: 6vw;
+      font-weight: 900;
+      color: #000;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 10px;
+    }
+    .shutter-progress-track {
+      width: 250px;
+      height: 2px;
+      background-color: rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+    .shutter-progress-fill {
+      height: 100%;
+      background-color: #000;
+      width: 0%;
+      transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    [data-theme="light"] .shutter-loading-text {
+      color: #fff;
+    }
+    [data-theme="light"] .shutter-progress-track {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    [data-theme="light"] .shutter-progress-fill {
+      background-color: #fff;
+    }
+
+    .contact-glassy-socials {
+      display: flex;
+      gap: 25px;
+      margin-top: 40px;
+      z-index: 10;
+    }
+    .contact-glassy-socials a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px) brightness(1.2);
+      -webkit-backdrop-filter: blur(10px) brightness(1.2);
+      transition: all 0.4s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 0 15px rgba(255, 255, 255, 0.05);
+    }
+    .contact-glassy-socials a svg {
+      width: 26px;
+      height: 26px;
+      fill: #fff;
+      transition: all 0.4s ease;
+    }
+    .contact-glassy-socials a:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-6px) scale(1.05);
+      border-color: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+
+    /* White header override for Contact page */
+    .header-white .github-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); }
+    .header-white .github-logo svg { fill: #fff !important; }
+    .header-white nav, .header-white .theme-switch { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+    .header-white nav a { color: #fff !important; text-shadow: none !important; }
+    .header-white .theme-switch svg { fill: #fff !important; opacity: 0.6; }
+    .header-white .theme-switch .active svg { fill: #fff !important; opacity: 1; }
+  </style>
+
+</head>
+
+<body>
+
+  <div id="root"></div>
+
+  <svg style="position: absolute; width: 0; height: 0;">
+    <filter id="venom-goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="18" result="blur" />
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 40 -15" result="goo" />
+      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+    </filter>
+  </svg>
+
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useRef } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { Canvas } from '@react-three/fiber';
+    import Lenis from '@studio-freight/lenis';
+
+    const MoonIcon = () => <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>;
+    const SunIcon = () => <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>;
+    const GithubIcon = () => <svg viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>;
+    const InstaIcon = () => <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>;
+    const LinkedInIcon = () => <svg viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>;
+    const EmailIcon = () => <svg viewBox="0 0 24 24"><path d="M0 3v18h24v-18h-24zm6.623 7.929l-4.623 5.712v-9.458l4.623 3.746zm-4.141-5.929h19.035l-9.517 7.713-9.518-7.713zm5.694 7.188l3.824 3.099 3.83-3.104 5.612 6.817h-18.866l5.6-6.812zm9.201-1.451l4.623-3.747v9.475l-4.623-5.728z"/></svg>;
+    const WhatsAppIcon = () => <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.89-4.443 9.891-9.896.001-5.45-4.44-9.891-9.89-9.891-5.45 0-9.893 4.441-9.893 9.891 0 1.954.551 3.766 1.534 5.36l-1.077 3.935 4.043-1.051z"/></svg>;
+    const SearchIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
+    const BackArrowIcon = () => <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>;
+    const RobotIcon = () => (
+      <svg viewBox="0 0 24 24" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="5" y="9" width="14" height="11" rx="2"/>
+        <circle cx="9.5" cy="14.5" r="1.2" fill="#fff" stroke="none"/>
+        <circle cx="14.5" cy="14.5" r="1.2" fill="#fff" stroke="none"/>
+        <path d="M12 9V6"/>
+        <path d="M8 6h8"/>
+        <circle cx="12" cy="4" r="1.2" fill="#fff" stroke="none"/>
+        <path d="M5 14H3M21 14h-2"/>
+      </svg>
+    );
+
+    const PROJECT_DETAILS = [
+      { name: 'Trend Trove', info: 'Trend Trove is a full-stack, glassmorphic e-commerce platform built with Tailwind CSS, Alpine.js, and a comprehensive Firebase backend. A major standout feature of this project is the fully integrated AI Customer Support Assistant. Operating 24/7 from a sleek, animated UI component, the AI agent utilizes custom system context to fetch live inventory data, answer product queries, and safely guide shoppers. Beyond AI, the platform features an interactive 3D product viewer and a complex HTML5 Canvas mockup builder that allows users to upload, resize, and preview custom graphics on dynamically recolored apparel.', objective: 'The primary goal was to revolutionize the standard online shopping experience in Pakistan by merging premium web aesthetics with intelligent, interactive tools. By implementing the AI-driven chatbot, the platform solves the problem of delayed customer support, instantly resolving shopper hesitation to reduce cart abandonment. Furthermore, the 3D viewer and custom-clothing builder tackle the challenge of digital product visualization, empowering users to confidently design and see exactly what they are buying, effectively bridging the gap between online browsing and physical retail.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'AI MAZE GAME', info: 'This project is an Intelligent Multi-Agent Maze Game featuring a custom-built, heuristic-driven AI architecture. Unlike simple implementations, this game engine manages three distinct agents in real-time. The Monster Agent utilizes an optimized A* Search algorithm for intelligent pursuit, while the AI Player Agent employs a custom Minimax algorithm with Alpha-Beta pruning to make strategic, adversarial decisions in a dynamic environment. The game environment is further enhanced with a Constraint Satisfaction Problem (CSP) logic layer to intelligently distribute coins across the board, ensuring a balanced challenge. The frontend is a high-performance, glassmorphic UI built with Three.js and GSAP, featuring a 3D-rotated game board and real-time pathfinding visualization.', objective: 'The objective was to design and implement a complex multi-agent system where independent AI entities interact within a shared environment. By creating a custom Minimax agent (no external API calls) and an A* tracking system, the project demonstrates how classic artificial intelligence concepts—such as state-space search, heuristic evaluation, and constraint propagation—can be directly applied to game design to create an engaging, non-deterministic experience. The final result is a proof-of-concept that highlights the efficiency of local, code-based decision-making in high-pressure, resource-constrained environments.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'work with ease app', info: 'Work With Ease is a centralized productivity dashboard engineered to unify fragmented digital workspaces. Built with HTML, CSS, JavaScript, and a Firebase backend, the platform allows users to run multiple essential web apps—like GitHub, Slack, and Notion—within a single tabbed interface. A core feature of this architecture is the integration of the Gemini AI API, which acts as a smart agent to dynamically search, fetch, and connect new applications. The hub also boasts a real-time task scheduling system with audio alarms, live Gmail API integration for instant email notifications, and a highly responsive, glassmorphic UI featuring 3D flip-card authentication.', objective: 'The primary objective was to eliminate the friction and cognitive load of constant context-switching for developers and digital professionals. By consolidating communication, development, and scheduling tools into one seamless interface, the project solves the problem of cluttered browser workflows. The addition of an AI-driven app assistant and real-time task tracking ensures that users can stay entirely focused on their objectives without leaving the dashboard, resulting in a streamlined, distraction-free environment that maximizes daily productivity.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'RIVENTA HOLDING SYSTEM', info: 'Riventa Enterprises PVT is a robust, enterprise-grade fleet and financial management ecosystem designed to orchestrate complex transportation operations. At its core lies a highly sophisticated, multi-relational Firebase database that serves as the single source of truth for all business logic. This complex backend architecture manages deep interdependencies between stakeholders, including real-time employee attendance tracking, dynamic profit-loss calculations with automated currency conversion (AED to Rs), and an integrated multi-tiered commission distribution system. The platform features an intelligent, permission-based dashboard where admins can manage dynamic task assignment, granular financial ledgers, and automated invoicing, all while maintaining data integrity across split-profile assignments and multi-user performance targets.', objective: 'The objective was to replace inefficient, manual spreadsheet-based tracking with a unified, data-driven digital infrastructure. This system solves the challenge of financial transparency by automating complex calculations—such as split-profile commissions and daily operational expenses—thereby eliminating human error in salary and revenue reporting. By integrating real-time database synchronization with a glassmorphic, user-friendly UI, the project provides a scalable foundation for business growth, allowing management to make informed, data-backed decisions in real-time while ensuring that all stakeholders have access to accurate, up-to-date performance metrics.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'old liquid portfolio', info: 'This portfolio is built as a high-fidelity visual experience, leveraging advanced WebGL and GSAP animations to create a premium, interactive environment. A defining technical feature is the immersive liquid surface background, which renders a physics-based, light-responsive fluid plane that reacts to the viewport, providing a constant sense of motion and organic depth. The architecture centers around a high-performance interactive gallery featuring a sophisticated "Visual Stories" stacking animation and a seamless, custom-built image expansion portal that transitions images from grid thumbnails into full-screen, blurred-glass overlays. With a fully integrated custom email handler using EmailJS and a fluid, responsive UI, the site is designed to function as a tactile showcase for high-end graphic design work.', objective: 'The objective was to create a digital space that transcends the static nature of traditional portfolios by using motion as a narrative tool. By implementing the WebGL liquid background, the goal was to evoke a modern, "premium" feel that reinforces the site\'s high-tech and creative identity. The site solves the common problem of user disengagement by utilizing scroll-triggered animations and fluid transitions, ensuring that the visitor’s journey through the work—from branding posters to technical projects—feels like a cohesive, curated story rather than a simple list of images.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'diabetes analysis', info: 'This project is an End-to-End Diabetes Risk Assessment Engine designed to process, clean, and analyze high-volume health datasets. The backend is powered by a robust Flask API that orchestrates an advanced data pipeline, including handling missing values, capping outliers based on medical thresholds, and reconciling contradictory diagnostic labels. A critical feature of this project is its statistical rigor and bias mitigation; the system employs SMOTE (Synthetic Minority Over-sampling Technique) to address class imbalance, ensuring the model does not suffer from predictive bias toward the majority class. The final intelligence is driven by a Logistic Regression model validated with Stratified K-Fold Cross-Validation, providing users with real-time risk predictions and probabilistic insights via a clean, interactive dashboard.', objective: 'The primary objective was to build a reliable, automated tool for early diabetes risk identification. The system solves the problem of data "noise"—common in health records—by implementing a multi-stage cleaning pipeline that corrects unrealistic medical metrics (e.g., impossible BMI values or infant data anomalies). Furthermore, by deploying this as a web-accessible application, the objective was to democratize access to predictive health insights, allowing users to input their metrics and receive an immediate risk assessment, while simultaneously providing data analysts with deep statistical tools like Kernel Density Estimation (KDE), confidence intervals, and pairwise correlation analysis to explore health trends.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'university management system', info: 'FAST NUCES Premium UMS is a comprehensive, full-stack University Management System designed to handle complex academic hierarchies. The backbone of this application is a highly normalized, relational database architecture that manages intricate many-to-many relationships—specifically between students, departments, instructors, and courses. A primary focus of this project was implementing robust Role-Based Access Control (RBAC), where the interface dynamically reconfigures its UI, API permissions, and navigation based on whether the user is an Admin, Instructor, or Student. The platform features an automated grading pipeline, multi-level enrollment logic, and an advanced transcript engine that dynamically calculates SGPA based on course credits and grade-point conversion.', objective: 'The objective was to build a secure, efficient, and scalable centralized hub that simplifies academic administration. The system addresses the common problem of data silos in university management by creating a unified "single source of truth" for student enrollments, instructor assignments, and exam results. By integrating features like automated transcript generation and dynamic grading systems, the project aims to reduce administrative overhead and provide students with real-time access to their academic progress, effectively automating the lifecycle of a student from enrollment to graduation.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'AI WAMPUS PLAYER', info: 'The Dynamic Wumpus World Logic Agent is an autonomous AI system designed to solve one of the most classic challenges in Artificial Intelligence. Unlike standard game agents that rely on pre-programmed paths, this agent operates using a Knowledge-Based (KB) architecture grounded in Propositional Logic. The project implements a custom Resolution Refutation engine from scratch, allowing the agent to "reason" about its environment—converting sensor percepts (Breeze, Stench) into logical axioms, storing them in a CNF (Conjunctive Normal Form) Knowledge Base, and mathematically proving the safety of cells before making a move. The frontend is a visually immersive simulation built with Three.js and GSAP, providing real-time visualization of the agent\'s internal reasoning process, including a live clause-resolution log and a dynamic grid that reacts to the agent\'s discoveries.', objective: 'The objective was to explore and implement the foundations of symbolic AI by building a rational agent capable of operating under uncertainty. The project addresses the problem of logical inference in a partially observable environment. By developing a custom logic engine that performs proofs of safety, the objective was to demonstrate how an AI can move beyond simple trial-and-error to exhibit "intelligence" via formal deduction. This project bridges the gap between theoretical logic coursework and practical application, providing an interactive environment to test how different hazard dens', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'visualizer for ai algos', info: 'The Multi-Algorithm Pathfinding Visualizer is an interactive, real-time educational engine developed in Python using Pygame and OpenCV. The core objective was to create a "glass-box" view into pathfinding logic, allowing users to contrast the search strategies of six distinct algorithms—ranging from uninformed searches like Breadth-First Search (BFS) and Depth-First Search (DFS) to optimized approaches like Uniform Cost Search (UCS) and memory-efficient variations like Iterative Deepening (IDDFS). The application features an integrated image-processing module that utilizes adaptive thresholding with OpenCV to convert real-world maze images into navigable grid data, providing a tactile, hands-on way to analyze how AI "thinks" across different constraints.', objective: 'The objective was to translate abstract algorithmic theory into a tangible visual experience. By providing a side-by-side performance comparison, the project solves the problem of "black-box" understanding, helping students and engineers visualize why BFS guarantees the shortest path in unweighted graphs while UCS excels in weighted environments. The project underscores the importance of data structure selection (e.g., using heapq for priority queues in UCS vs. deque for queues in BFS) and demonstrates how heuristic and structural constraints drastically alter an agent\'s pathfinding efficiency.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { name: 'paras jewelers', info: 'Paras Jewelers is a digital storefront designed to showcase luxury craftsmanship through a minimal, high-end interface. The platform is supported by a dynamic relational database that manages a complex inventory of fine jewelry, including real-time stock tracking for gold and diamond collections. The backend architecture is built to handle the unique data requirements of a jeweler, such as tracking product purity (karat), metal weight, and intricate design specifications, while providing a seamless user experience. The site features an infinite-scroll marquee for collection previews and an integrated contact workflow to facilitate bespoke customer inquiries, ensuring the digital presence matches the elegance of the physical brand.', objective: 'The objective was to modernize the traditional jewelry retail experience by providing a high-performance digital catalog that emphasizes visual storytelling. The system solves the challenge of inventory visibility by linking the frontend catalog to a structured database, allowing the owners to easily manage their collection without technical overhead. By combining sophisticated typography, parallax hero effects, and a data-backed product management system, the project aims to build trust with customers, provide detailed product specifications (metadata), and create a streamlined channel for high-value client consultations.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+    ];
+
+    const VenomCursor = ({ isDark }) => {
+      const canvasRef = useRef(null);
+      const particles = useRef([]);
+      const lastMouse = useRef({ x: window.innerWidth/2, y: window.innerHeight/2 });
+      const mouse = useRef({ x: window.innerWidth/2, y: window.innerHeight/2 });
+      const isDarkRef = useRef(isDark);
+
+      useEffect(() => {
+        isDarkRef.current = isDark;
+      }, [isDark]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        
+        const resize = () => {
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+
+        const handleMouseMove = (e) => {
+          mouse.current = { x: e.clientX, y: e.clientY };
+          
+          const dx = mouse.current.x - lastMouse.current.x;
+          const dy = mouse.current.y - lastMouse.current.y;
+          const speed = Math.sqrt(dx*dx + dy*dy);
+          
+          if (speed > 1) {
+            const numParticles = Math.min(Math.floor(speed / 4), 8) + 3; 
+            
+            for(let i = 0; i < numParticles; i++) {
+              particles.current.push({
+                x: mouse.current.x + (Math.random() - 0.5) * 15,
+                y: mouse.current.y + (Math.random() - 0.5) * 15,
+                vx: (-dx * 0.04) + (Math.random() - 0.5) * 1.5,
+                vy: (-dy * 0.04) + (Math.random() - 0.5) * 1.5,
+                size: Math.random() * 35 + 25, 
+                life: 1,
+                decay: Math.random() * 0.015 + 0.01 
+              });
+            }
+          }
+          lastMouse.current = { x: e.clientX, y: e.clientY };
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+
+        const animate = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          
+          ctx.fillStyle = '#FFC700'; 
+          
+          for(let i = particles.current.length - 1; i >= 0; i--) {
+            let p = particles.current[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= p.decay;
+            p.size *= 0.94; 
+
+            if(p.life <= 0 || p.size <= 0.5) {
+              particles.current.splice(i, 1);
+            } else {
+              ctx.beginPath();
+              ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          requestAnimationFrame(animate);
+        };
+        animate();
+
+        return () => {
+          window.removeEventListener('resize', resize);
+          window.removeEventListener('mousemove', handleMouseMove);
+        };
+      }, []);
+
+      return (
+        <div className="venom-wrapper">
+          <div className="venom-goo-container">
+            <canvas ref={canvasRef} />
+          </div>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [isDark, setIsDark] = useState(true);
+      const [roleText, setRoleText] = useState("GLITCH TEXT");
+      const [glitchActive, setGlitchActive] = useState(false);
+      const [shutterPhase, setShutterPhase] = useState(2); // Starts fully covered for initial load
+      const [initialLoad, setInitialLoad] = useState(true);
+      const [isLoading, setIsLoading] = useState(true);
+      const [progressWidth, setProgressWidth] = useState(0);
+      const [isZoomedOut, setIsZoomedOut] = useState(false);
+      const [currentProject, setCurrentProject] = useState(0);
+      const [smoothProject, setSmoothProject] = useState(0);
+      const targetProgress = useRef(0);
+      const currentProgress = useRef(0);
+      const scrollSnapTimeout = useRef(null);
+      const scrollAccumulator = useRef(0);
+      const totalProjects = 10;
+      const scrollLock = useRef(false);
+      const [detailOpen, setDetailOpen] = useState(false);
+      const [detailExpanded, setDetailExpanded] = useState(false);
+      const [activeDetailProject, setActiveDetailProject] = useState(null);
+      const [detailPage, setDetailPage] = useState(0);
+      const [contactShutterPhase, setContactShutterPhase] = useState(0);
+      const [isContactPage, setIsContactPage] = useState(false);
+      const detailScrollRef = useRef(null);
+
+      const playTickSound = () => {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(600, audioCtx.currentTime); // Pitch
+        
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime); // Volume
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); // Short tick decay
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.05);
+      };
+
+      const playThreeTicks = () => {
+        playTickSound();
+        setTimeout(playTickSound, 150);
+        setTimeout(playTickSound, 300);
+      };
+
+      const runProgress = () => {
+        setProgressWidth(0);
+        setTimeout(() => {
+          setProgressWidth(70);
+        }, 50);
+        setTimeout(() => {
+          setProgressWidth(100);
+        }, 1200);
+      };
+
+      useEffect(() => {
+        setTimeout(() => {
+          runProgress();
+        }, 400); 
+        
+        setTimeout(() => {
+          setShutterPhase(0);
+          setIsLoading(false);
+        }, 3400); 
+        
+        setTimeout(() => {
+          setInitialLoad(false);
+          setProgressWidth(0);
+        }, 4200); 
+      }, []);
+
+      const handleNextProject = () => {
+        playThreeTicks();
+        setCurrentProject((prev) => Math.min(prev + 1, totalProjects - 1));
+      };
+
+      const handlePrevProject = () => {
+        playThreeTicks();
+        setCurrentProject((prev) => Math.max(prev - 1, 0));
+      };
+
+      const openProjectDetail = (projectIdx) => {
+        setActiveDetailProject(projectIdx);
+        setDetailPage(0);
+        setDetailOpen(true);
+        setDetailExpanded(false);
+        if (detailScrollRef.current) detailScrollRef.current.scrollTop = 0;
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => setDetailExpanded(true));
+        });
+      };
+
+      const closeProjectDetail = () => {
+        setDetailExpanded(false);
+        setTimeout(() => {
+          setDetailOpen(false);
+          setActiveDetailProject(null);
+          setDetailPage(0);
+        }, 900);
+      };
+
+      const openContactPage = () => {
+        setContactShutterPhase(2); 
+        setTimeout(() => {
+          setIsLoading(true);
+          runProgress();
+        }, 800);
+        setTimeout(() => {
+          setContactShutterPhase(3); 
+          setIsContactPage(true);
+          setIsLoading(false);
+          setTimeout(() => setProgressWidth(0), 400);
+        }, 3800); 
+      };
+
+      useEffect(() => {
+        targetProgress.current = currentProject;
+      }, [currentProject]);
+
+      useEffect(() => {
+        let animationFrameId;
+        const renderLoop = () => {
+          if (Math.abs(targetProgress.current - currentProgress.current) > 0.001) {
+            currentProgress.current += (targetProgress.current - currentProgress.current) * 0.1;
+            setSmoothProject(currentProgress.current);
+          }
+          animationFrameId = requestAnimationFrame(renderLoop);
+        };
+        renderLoop();
+        return () => cancelAnimationFrame(animationFrameId);
+      }, []);
+
+      const closeContactPage = () => {
+        setContactShutterPhase(4); 
+        setIsContactPage(false);
+        setTimeout(() => {
+          setIsLoading(true);
+          runProgress();
+        }, 800);
+        setTimeout(() => {
+          setContactShutterPhase(0); 
+          setIsLoading(false);
+          setTimeout(() => setProgressWidth(0), 400);
+        }, 3800); 
+      };
+
+      const goToHome = () => {
+        if (contactShutterPhase > 0 && contactShutterPhase !== 4) closeContactPage();
+        if (shutterPhase > 0 && shutterPhase !== 4) closeWorkPage();
+        setTimeout(() => {
+          setIsZoomedOut(false);
+          targetProgress.current = 0;
+          currentProgress.current = 0;
+          setSmoothProject(0);
+        }, 1000);
+      };
+
+      const goToWork = () => {
+        if (contactShutterPhase > 0 && contactShutterPhase !== 4) closeContactPage();
+        if (shutterPhase === 0) openWorkPage();
+        setTimeout(() => {
+          setIsZoomedOut(false);
+          targetProgress.current = 0;
+          currentProgress.current = 0;
+          setSmoothProject(0);
+        }, 1000);
+      };
+
+      const goToContact = () => {
+        if (shutterPhase > 0 && shutterPhase !== 4) closeWorkPage();
+        if (contactShutterPhase === 0) openContactPage();
+      };
+
+      useEffect(() => {
+        const handleWheel = (e) => {
+          if (scrollLock.current) return;
+          if (Math.abs(e.deltaY) < 20) return;
+
+          const isScrollingDown = e.deltaY > 0;
+          const isScrollingUp = e.deltaY < 0;
+
+          const lockScroll = (duration) => {
+            scrollLock.current = true;
+            setTimeout(() => { scrollLock.current = false; }, duration);
+          };
+
+          if (detailOpen) {
+            e.preventDefault();
+            const container = detailScrollRef.current;
+            if (!container) return;
+            const totalDetailPages = 3;
+            if (isScrollingDown && detailPage < totalDetailPages - 1) {
+              const nextPage = detailPage + 1;
+              container.scrollTo({ top: nextPage * window.innerHeight, behavior: 'smooth' });
+              setDetailPage(nextPage);
+              lockScroll(800);
+            } else if (isScrollingUp && detailPage > 0) {
+              const prevPage = detailPage - 1;
+              container.scrollTo({ top: prevPage * window.innerHeight, behavior: 'smooth' });
+              setDetailPage(prevPage);
+              lockScroll(800);
+            }
+            return;
+          }
+
+          if (isZoomedOut && shutterPhase === 3 && detailPage === 0 && contactShutterPhase === 0) {
+            scrollAccumulator.current += e.deltaY;
+            const threshold = 350; 
+
+            if (Math.abs(scrollAccumulator.current) >= threshold) {
+               const steps = Math.trunc(scrollAccumulator.current / threshold);
+               scrollAccumulator.current -= steps * threshold; 
+               
+               let newProject = currentProject + steps;
+               
+               if (newProject > totalProjects - 1) {
+                  if (currentProject === totalProjects - 1) {
+                     setContactShutterPhase(1);
+                     scrollAccumulator.current = 0;
+                     lockScroll(800);
+                     return;
+                  }
+                  newProject = totalProjects - 1;
+               } else if (newProject < 0) {
+                  if (currentProject === 0) {
+                     setIsZoomedOut(false);
+                     scrollAccumulator.current = 0;
+                     lockScroll(1500);
+                     return;
+                  }
+                  newProject = 0;
+               }
+               
+               if (newProject !== currentProject) {
+                 setCurrentProject(newProject);
+                 
+                 if (newProject === 0) {
+                    lockScroll(1500); 
+                    scrollAccumulator.current = 0;
+                 } else if (newProject === totalProjects - 1) {
+                    lockScroll(800);
+                    scrollAccumulator.current = 0;
+                 }
+               }
+            }
+            
+            clearTimeout(scrollSnapTimeout.current);
+            scrollSnapTimeout.current = setTimeout(() => {
+               scrollAccumulator.current = 0;
+            }, 100);
+            return;
+          }
+          
+          if (contactShutterPhase === 1) {
+            if (isScrollingDown) {
+              openContactPage();
+              lockScroll(1800);
+            } else if (isScrollingUp) {
+              setContactShutterPhase(0);
+              lockScroll(800);
+            }
+            return;
+          }
+
+          if (isContactPage) {
+            if (isScrollingUp && contactShutterPhase === 3) {
+               closeContactPage();
+               lockScroll(2000);
+            }
+            return;
+          }
+
+          if (contactShutterPhase === 1) {
+            if (isScrollingDown) {
+              openContactPage();
+              lockScroll(2000);
+            } else if (isScrollingUp) {
+              setContactShutterPhase(0);
+              lockScroll(800);
+            }
+            return;
+          }
+
+          if (shutterPhase === 0) {
+            if (isScrollingDown) {
+              setShutterPhase(1);
+              lockScroll(800);
+            }
+          } 
+          else if (shutterPhase === 1) {
+            if (isScrollingDown) {
+              openWorkPage();
+              lockScroll(2000);
+            } else if (isScrollingUp) {
+              setShutterPhase(0);
+              lockScroll(800);
+            }
+          } 
+          else if (shutterPhase === 3) {
+            if (!isZoomedOut) {
+              if (isScrollingDown) {
+                setIsZoomedOut(true);
+                lockScroll(1200); 
+              } else if (isScrollingUp) {
+                closeWorkPage();
+                lockScroll(2000); 
+              }
+            }
+          }
+        };
+        
+        window.addEventListener('wheel', handleWheel, { passive: false });
+        return () => window.removeEventListener('wheel', handleWheel);
+      }, [shutterPhase, isZoomedOut, currentProject, detailOpen, detailPage, contactShutterPhase, isContactPage]);
+
+      const openWorkPage = () => {
+        setShutterPhase(2); 
+        setTimeout(() => {
+          setIsLoading(true);
+          runProgress();
+        }, 800);
+        setTimeout(() => {
+          setShutterPhase(3); 
+          setIsLoading(false);
+          setTimeout(() => setProgressWidth(0), 400);
+        }, 3800); 
+      };
+
+      const closeWorkPage = () => {
+        setShutterPhase(4); 
+        setTimeout(() => {
+          setIsLoading(true);
+          runProgress();
+        }, 800);
+        setTimeout(() => {
+          setShutterPhase(0); 
+          setIsLoading(false);
+          setTimeout(() => setProgressWidth(0), 400);
+        }, 3800); 
+      };
+
+      const roles = ["GLITCH TEXT", "AI SCIENTIST", "WEB DEV", "DESIGNER", "3D ANIMATOR"];
+
+      useEffect(() => {
+        const lenis = new Lenis();
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+      }, []);
+
+      useEffect(() => {
+        let index = 0;
+        const interval = setInterval(() => {
+          setGlitchActive(true);
+          setTimeout(() => {
+            index = (index + 1) % roles.length;
+            setRoleText(roles[index]);
+          }, 150);
+          setTimeout(() => setGlitchActive(false), 300);
+        }, 2500);
+        return () => clearInterval(interval);
+      }, []);
+
+      useEffect(() => {
+        document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      }, [isDark]);
+
+      return (
+        <div className="layout-wrapper">
+          <div className="r3f-container">
+            <Canvas><ambientLight intensity={0.5} /></Canvas>
+          </div>
+
+          <VenomCursor />
+
+          <header className={isContactPage ? "header-white" : ""}>
+            <div className="github-logo"><GithubIcon /></div>
+            <nav>
+              <a onClick={goToHome} style={{ cursor: 'pointer' }}>HOME</a>
+              <a onClick={goToWork} style={{ cursor: 'pointer' }}>WORK</a>
+              <a onClick={goToContact} style={{ cursor: 'pointer' }}>CONTACT</a>
+            </nav>
+            <div className="theme-switch" onClick={() => setIsDark(!isDark)}>
+              <div className={isDark ? 'active' : ''}><MoonIcon /></div>
+              <div className={!isDark ? 'active' : ''}><SunIcon /></div>
+            </div>
+          </header>
+
+          <h1 className="hero-text">AHMAD'S PORTFOLIO</h1>
+
+          <img 
+            src="my.png" 
+            alt="Ahmad Profile" 
+            className="person-img"
+          />
+
+          <div className="clouds"></div>
+
+          <div className="socials">
+            <InstaIcon />
+            <LinkedInIcon />
+            <EmailIcon />
+            <WhatsAppIcon />
+          </div>
+
+          <div className="glitch-wrapper">
+            <span className={`glitch ${glitchActive ? 'active' : ''}`} data-text={roleText}>
+              {roleText}
+            </span>
+          </div>
+
+          <div className={`work-zoom-ui ${isZoomedOut && contactShutterPhase === 0 && !isContactPage ? 'active' : ''}`} style={{ zIndex: 16000 }}>
+            <div className="carousel-arrow left" onClick={handlePrevProject}>
+              <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+            </div>
+            
+            <div className="ticker-container" style={{ pointerEvents: 'none', width: '200px', perspective: '600px', justifyContent: 'center' }}>
+              <div 
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: '40px',
+                  transformStyle: 'preserve-3d',
+                  transform: `translateZ(-180px) rotateY(${smoothProject * -(360 / totalProjects)}deg)`,
+                  transition: 'none',
+                  pointerEvents: 'auto'
+                }}
+              >
+                {Array.from({ length: 40 }).map((_, idx) => {
+                  const targetAngle = smoothProject * (360 / totalProjects);
+                  const tickAngle = idx * (360 / 40);
+                  let diff = Math.abs(targetAngle - tickAngle);
+                  if (diff > 180) diff = 360 - diff;
+                  
+                  const continuousSteps = diff / 9;
+                  let h = 6;
+                  let opacity = 0.15;
+                  let isCenter = false;
+                  
+                  if (continuousSteps < 7) {
+                    const heights = [40, 32, 24, 18, 14, 10, 8, 6];
+                    const opacities = [1, 0.85, 0.70, 0.55, 0.40, 0.25, 0.15, 0.15];
+                    const idx1 = Math.floor(continuousSteps);
+                    const idx2 = Math.min(7, idx1 + 1);
+                    const fraction = continuousSteps - idx1;
+                    
+                    h = heights[idx1] * (1 - fraction) + heights[idx2] * fraction;
+                    opacity = opacities[idx1] * (1 - fraction) + opacities[idx2] * fraction;
+                    isCenter = continuousSteps < 0.5;
+                  }
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => targetProgress.current = Math.round(idx / 4) % totalProjects}
+                      style={{ 
+                        position: 'absolute',
+                        top: 0,
+                        left: '50%',
+                        width: '20px', 
+                        height: '40px', 
+                        marginLeft: '-10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transform: `rotateY(${tickAngle}deg) translateZ(180px)`,
+                        backfaceVisibility: 'hidden' 
+                      }}
+                    >
+                      <div 
+                        className={`ticker-bar ${isCenter ? 'active' : ''}`}
+                        style={{ 
+                          height: `${h}px`, 
+                          width: isCenter ? '4px' : '3px',
+                          opacity: opacity,
+                          transition: 'none'
+                        }} 
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="carousel-arrow right" onClick={handleNextProject}>
+              <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+          </div>
+
+          <div className={`work-page ${shutterPhase === 3 || shutterPhase === 4 ? 'active' : ''}`}>
+            <header className="work-header">
+                <div className="github-logo"><GithubIcon /></div>
+                <nav>
+                  <a onClick={goToHome} style={{ cursor: 'pointer' }}>HOME</a>
+                  <a onClick={goToWork} style={{ cursor: 'pointer' }}>WORK</a>
+                  <a onClick={goToContact} style={{ cursor: 'pointer' }}>CONTACT</a>
+                </nav>
+                <div style={{ width: '50px' }}></div>
+              </header>
+            <div 
+              className="carousel-track"
+              style={{
+                display: 'flex',
+                width: `${totalProjects * 100}vw`,
+                transform: `translateX(-${smoothProject * 100}vw)`,
+                transition: 'none',
+                height: '100vh',
+                position: 'absolute',
+                inset: 0
+              }}
+            >
+              {Array.from({ length: totalProjects }).map((_, projectIdx) => (
+                <div 
+                  key={projectIdx}
+                  className={`work-content-scaler ${isZoomedOut ? 'zoomed-out' : ''}`}
+                  style={{ 
+                    position: 'relative', 
+                    width: '100vw', 
+                    height: '100vh', 
+                    flexShrink: 0 
+                  }}
+                >
+                  {projectIdx === 0 ? (
+                    <>
+                      <div className="media-grid-wrapper">
+                        <div className="media-grid">
+                        {Array.from({ length: 24 }).map((_, i) => {
+                          const baseGithubUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals";
+                          const videoSrc = `${baseGithubUrl}/vedios/${(i % 10) + 1}.mp4`;
+                          return (
+                            <div className="grid-item" key={i}>
+                              <video src={videoSrc} autoPlay={true} loop={true} muted={true} playsInline={true} />
+                            </div>
+                          );
+                        })}
+                        </div>
+                      </div>
+
+                      <div className="work-center-content">
+                        <h1 className="welcome-text">WELCOME</h1>
+                        <button 
+                          className="glass-magnify-btn" 
+                          onClick={() => setIsZoomedOut(true)}
+                          style={{ opacity: isZoomedOut ? 0 : 1, pointerEvents: isZoomedOut ? 'none' : 'auto', transition: 'opacity 0.3s ease' }}
+                        >
+                          VIEW PROJECTS
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="project-frame">
+                      <img 
+                        src={encodeURI(`https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals/images/project ${projectIdx + 1}/project ${projectIdx + 1} detail 1.png`)} 
+                        alt={`Project ${projectIdx + 1}`} 
+                        className="project-img"
+                      />
+                      <button 
+                        className="view-details-btn"
+                        onClick={() => openProjectDetail(projectIdx)}
+                      >
+                        VIEW DETAILS
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* --- CONTACT PAGE --- */}
+          <div className={`contact-page ${contactShutterPhase === 3 || contactShutterPhase === 4 || isContactPage ? 'active' : ''}`}>
+             <header className="work-header header-white">
+                <div style={{ width: '50px' }}></div>
+                <nav>
+                  <a onClick={goToHome} style={{ cursor: 'pointer' }}>HOME</a>
+                  <a onClick={goToWork} style={{ cursor: 'pointer' }}>WORK</a>
+                  <a onClick={goToContact} style={{ cursor: 'pointer' }}>CONTACT</a>
+                </nav>
+                <div style={{ width: '50px' }}></div>
+              </header>
+             <div className="contact-flip-container">
+               <div className="contact-flip-inner">
+                 <div className="contact-flip-front">
+                   <h2>Contact Us</h2>
+                   <p>Move cursor here to talk</p>
+                 </div>
+                 <div className="contact-flip-back">
+                   <h2>Send Message</h2>
+                   <div className="contact-form-group">
+                     <label>Full Name</label>
+                     <input type="text" />
+                   </div>
+                   <div className="contact-form-group">
+                     <label>Email</label>
+                     <input type="email" />
+                   </div>
+                   <div className="contact-form-group">
+                     <label>Message</label>
+                     <textarea></textarea>
+                   </div>
+                   <button className="glassy-submit-btn">Send Message</button>
+                 </div>
+               </div>
+             </div>
+
+             <div className="contact-glassy-socials">
+               <a href="#" aria-label="WhatsApp"><WhatsAppIcon /></a>
+               <a href="#" aria-label="LinkedIn"><LinkedInIcon /></a>
+               <a href="#" aria-label="GitHub"><GithubIcon /></a>
+               <a href="#" aria-label="Email"><EmailIcon /></a>
+             </div>
+          </div>
+
+          <div className={`contact-shutter-container phase-${contactShutterPhase}`}>
+            <div className="shutter-panel">
+              <div className="work-btn" onClick={openContactPage}>
+                <EmailIcon /> CONTACT
+              </div>
+            </div>
+          </div>
+
+          {/* --- PROJECT DETAIL OVERLAY --- */}
+          {detailOpen && activeDetailProject !== null && (() => {
+            const detailData = PROJECT_DETAILS[activeDetailProject - 1] || PROJECT_DETAILS[0];
+            const githubVisualsUrl = "https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/visuals";
+            const projectNum = activeDetailProject + 1;
+            const mediaSrc = encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 1.png`);
+            return (
+              <div className={`project-detail-overlay active ${detailExpanded ? 'expanded' : ''}`}>
+                <div className="project-detail-header">
+                  <button className="project-detail-back-btn" onClick={closeProjectDetail}>
+                    <BackArrowIcon /> BACK
+                  </button>
+                  <h2 className="project-detail-title">{detailData.name}</h2>
+                  <div className="project-detail-header-links">
+                    <a className="project-detail-header-link" href={detailData.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                      <LinkedInIcon />
+                    </a>
+                    <a className="project-detail-header-link github" href={detailData.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                      <GithubIcon />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="project-detail-robot-bottom">
+                  <RobotIcon />
+                </div>
+
+                <div className="project-detail-page-indicator">
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} className={`project-detail-dot ${detailPage === i ? 'active' : ''}`} />
+                  ))}
+                </div>
+
+                <div
+                  className="project-detail-scroll"
+                  ref={detailScrollRef}
+                  onScroll={() => {
+                    if (detailScrollRef.current) {
+                      const page = Math.round(detailScrollRef.current.scrollTop / window.innerHeight);
+                      setDetailPage(page);
+                    }
+                  }}
+                >
+                  <div className="project-detail-page">
+                    <div className="project-detail-hero">
+                      <div className="project-detail-media-wrap">
+                        <img src={mediaSrc} alt={detailData.name} />
+                      </div>
+                      {detailData.showVisitSite !== false && (
+                        <a
+                          className="project-detail-visit-btn"
+                          href={detailData.visitSiteUrl || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          VISIT SITE
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="project-detail-page">
+                    <div className="project-detail-about-page">
+                      <div className="project-detail-about-content">
+                        <h2 className="project-detail-about-title">ABOUT PROJECT</h2>
+                        <p className="project-detail-about-text">{detailData.info}</p>
+                      </div>
+                      <div className="project-detail-about-images">
+                        <div className="about-img-card">
+                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 1.png`)} alt={`Project ${projectNum} Detail 1`} />
+                        </div>
+                        <div className="about-img-card">
+                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 2.png`)} alt={`Project ${projectNum} Detail 2`} />
+                        </div>
+                        <div className="about-img-card">
+                          <img src={encodeURI(`${githubVisualsUrl}/images/project ${projectNum}/project ${projectNum} detail 3.png`)} alt={`Project ${projectNum} Detail 3`} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="project-detail-page">
+                    <div className="project-detail-text-page">
+                      <h3 className="project-detail-section-label">Objective</h3>
+                      <p className="project-detail-section-body">{detailData.objective}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className={`shutter-container phase-${shutterPhase}`}>
+            <div className="shutter-panel">
+              <div className="work-btn" onClick={openWorkPage}>
+                <SearchIcon /> MY WORK
+              </div>
+            </div>
+          </div>
+
+          <div className={`shutter-loading-container ${isLoading ? 'active' : ''}`}>
+            <div className="shutter-loading-text">
+              {initialLoad ? "WELCOME" : "PROCESSING"}
+            </div>
+            <div className="shutter-progress-track">
+              <div className="shutter-progress-fill" style={{ width: `${progressWidth}%` }}></div>
+            </div>
+          </div>
+
+        </div>
+      );
+    };
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
