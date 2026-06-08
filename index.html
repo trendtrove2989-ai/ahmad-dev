@@ -63,6 +63,7 @@
       background-color: var(--bg-color);
       transition: background-color 0.4s ease;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow: hidden;
     }
 
     header {
@@ -288,7 +289,7 @@
       font-family: 'Inter', sans-serif;
       font-weight: 800;
       font-size: 8vw;
-      color: #ffffff;
+      color: var(--brand-yellow);
       margin: 0;
       letter-spacing: 6px;
       line-height: 1;
@@ -426,6 +427,38 @@
       pointer-events: none;
       transition: opacity 0.6s ease;
       background: transparent;
+      overflow: hidden;
+    }
+    
+    .grid-welcome-content {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      transform: translateY(20px);
+    }
+
+    .grid-welcome-content.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    .welcome-grid-title {
+      font-family: 'Anton', sans-serif;
+      font-size: 8vw;
+      color: var(--brand-yellow);
+      letter-spacing: 2px;
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0px #000, -2px -2px 0px #000, 4px 4px 15px rgba(0,0,0,0.8);
+      margin: 0;
+      line-height: 1.1;
     }
     
     .work-zoom-ui.active {
@@ -1210,6 +1243,78 @@
     .header-white nav a { color: #fff !important; text-shadow: none !important; }
     .header-white .theme-switch svg { fill: #fff !important; opacity: 0.6; }
     .header-white .theme-switch .active svg { fill: #fff !important; opacity: 1; }
+
+    /* Video Grid Layout */
+    .video-grid-container {
+      position: absolute;
+      top: -10vh; left: -10vw; 
+      width: 120vw; 
+      height: 120vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5vw;
+      overflow: hidden;
+      z-index: 0;
+      background: #050505;
+      pointer-events: none;
+    }
+
+    .video-grid-row {
+      display: flex;
+      gap: 1.5vw;
+      width: max-content;
+      transform: translateX(0);
+    }
+
+    .video-grid-row.offset {
+      transform: translateX(-15vw);
+    }
+
+    .video-grid-item {
+      height: 22vh;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #111;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+    }
+
+    .video-grid-item.desktop {
+      width: calc(22vh * 1.77);
+    }
+
+    .video-grid-item.mobile {
+      width: calc(22vh * 0.56);
+    }
+
+    .video-grid-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.85;
+      transition: opacity 0.5s ease;
+    }
+
+    .video-grid-item img:hover {
+      opacity: 1;
+    }
+
+    .video-grid-vignette {
+      position: absolute;
+      top: 10vh; left: 10vw; 
+      width: 100vw; height: 100vh;
+      background: linear-gradient(to bottom, 
+        rgba(0,0,0,0.98) 0%, 
+        rgba(0,0,0,0.6) 15%, 
+        rgba(0,0,0,0.1) 30%, 
+        rgba(0,0,0,0) 50%, 
+        rgba(0,0,0,0.1) 70%, 
+        rgba(0,0,0,0.6) 85%, 
+        rgba(0,0,0,0.98) 100%);
+      z-index: 0;
+      pointer-events: none;
+    }
   </style>
 
 </head>
@@ -1252,6 +1357,56 @@
         <path d="M5 14H3M21 14h-2"/>
       </svg>
     );
+
+    const VideoGrid = () => {
+      const [rows, setRows] = React.useState([]);
+
+      React.useEffect(() => {
+        let desktopCounter = 1;
+        let mobileCounter = 1;
+
+        const getD = () => {
+          const c = desktopCounter;
+          desktopCounter = desktopCounter >= 15 ? 1 : desktopCounter + 1;
+          return c;
+        };
+
+        const getM = () => {
+          const c = mobileCounter;
+          mobileCounter = mobileCounter >= 5 ? 1 : mobileCounter + 1;
+          return c;
+        };
+
+        const generatedRows = [];
+        for (let r = 0; r < 7; r++) { 
+          const items = [];
+          for (let i = 0; i < 14; i++) { 
+            if ((i + 1) % 3 === 0) {
+              items.push({ type: 'mobile', src: `m${getM()}.mp4` });
+            } else {
+              items.push({ type: 'desktop', src: `${getD()}.mp4` });
+            }
+          }
+          generatedRows.push(items);
+        }
+        setRows(generatedRows);
+      }, []);
+
+      return (
+        <div className="video-grid-container">
+          {rows.map((rowItems, rIdx) => (
+            <div key={rIdx} className={`video-grid-row ${rIdx % 2 !== 0 ? 'offset' : ''}`}>
+              {rowItems.map((item, iIdx) => (
+                <div key={iIdx} className={`video-grid-item ${item.type}`}>
+                  <video src={encodeURI(`/visuals/vedios/${item.src}`)} autoPlay loop muted playsInline />
+                </div>
+              ))}
+            </div>
+          ))}
+          <div className="video-grid-vignette"></div>
+        </div>
+      );
+    };
 
     const PROJECT_DETAILS = [
       { name: 'Trend Trove', info: 'Trend Trove is a full-stack, glassmorphic e-commerce platform built with Tailwind CSS, Alpine.js, and a comprehensive Firebase backend. A major standout feature of this project is the fully integrated AI Customer Support Assistant. Operating 24/7 from a sleek, animated UI component, the AI agent utilizes custom system context to fetch live inventory data, answer product queries, and safely guide shoppers. Beyond AI, the platform features an interactive 3D product viewer and a complex HTML5 Canvas mockup builder that allows users to upload, resize, and preview custom graphics on dynamically recolored apparel.', objective: 'The primary goal was to revolutionize the standard online shopping experience in Pakistan by merging premium web aesthetics with intelligent, interactive tools. By implementing the AI-driven chatbot, the platform solves the problem of delayed customer support, instantly resolving shopper hesitation to reduce cart abandonment. Furthermore, the 3D viewer and custom-clothing builder tackle the challenge of digital product visualization, empowering users to confidently design and see exactly what they are buying, effectively bridging the gap between online browsing and physical retail.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
@@ -1363,6 +1518,7 @@
       const [isLoading, setIsLoading] = useState(true);
       const [progressWidth, setProgressWidth] = useState(0);
       const [isZoomedOut, setIsZoomedOut] = useState(false);
+      const [isGridWelcome, setIsGridWelcome] = useState(false);
       const [currentProject, setCurrentProject] = useState(0);
       const [smoothProject, setSmoothProject] = useState(0);
       const targetProgress = useRef(0);
@@ -1440,7 +1596,7 @@
       };
 
       const openProjectDetail = (projectIdx) => {
-        setActiveDetailProject(projectIdx);
+        setActiveDetailProject(projectIdx - 1);
         setDetailPage(0);
         setDetailOpen(true);
         setDetailExpanded(false);
@@ -1509,6 +1665,7 @@
         if (shutterPhase > 0 && shutterPhase !== 4) closeWorkPage();
         setTimeout(() => {
           setIsZoomedOut(false);
+          setIsGridWelcome(false);
           targetProgress.current = 0;
           currentProgress.current = 0;
           setSmoothProject(0);
@@ -1519,6 +1676,7 @@
         if (contactShutterPhase > 0 && contactShutterPhase !== 4) closeContactPage();
         if (shutterPhase === 0) openWorkPage();
         setTimeout(() => {
+          setIsGridWelcome(true);
           setIsZoomedOut(false);
           targetProgress.current = 0;
           currentProgress.current = 0;
@@ -1694,6 +1852,8 @@
         }, 800);
         setTimeout(() => {
           setShutterPhase(0); 
+          setIsGridWelcome(false);
+          setIsZoomedOut(false);
           setIsLoading(false);
           setTimeout(() => setProgressWidth(0), 400);
         }, 3800); 
@@ -1845,6 +2005,20 @@
             <div className="carousel-arrow right" onClick={handleNextProject}>
               <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
             </div>
+            
+            {/* The scaled down project cards preview */}
+            <div 
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '600px', 
+                height: '350px',
+                zIndex: 14000,
+                perspective: '1000px'
+              }}
+            ></div>
           </div>
 
           <div className={`work-page ${shutterPhase === 3 || shutterPhase === 4 ? 'active' : ''}`}>
@@ -1882,18 +2056,7 @@
                 >
                   {projectIdx === 0 ? (
                     <>
-                      <div className="media-grid-wrapper">
-                        <div className="media-grid">
-                        {Array.from({ length: 24 }).map((_, i) => {
-                          const videoSrc = `/visuals/vedios/${(i % 10) + 1}.mp4`;
-                          return (
-                            <div className="grid-item" key={i}>
-                              <video src={videoSrc} autoPlay={true} loop={true} muted={true} playsInline={true} />
-                            </div>
-                          );
-                        })}
-                        </div>
-                      </div>
+                      <VideoGrid />
 
                       <div className="work-center-content">
                         <h1 className="welcome-text">WELCOME</h1>
