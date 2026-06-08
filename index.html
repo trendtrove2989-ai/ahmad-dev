@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ahmad's Portfolio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><circle cx=%2250%22 cy=%2250%22 r=%2250%22 fill=%22%23Facc15%22/></svg>">
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,9 +74,9 @@
       padding: 0 40px; z-index: 100;
     }
 
-    .github-logo {
+    .site-logo {
       width: 50px; height: 50px; border-radius: 50%;
-      background: var(--text-secondary); color: var(--bg-color);
+      background: var(--brand-yellow);
       display: flex; align-items: center; justify-content: center;
       transition: 0.4s;
     }
@@ -410,8 +411,8 @@
       z-index: 15000; 
     }
     .work-header nav a { color: #fff !important; text-shadow: none !important; }
-    .work-header .github-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
-    .work-header .github-logo svg { fill: #fff !important; filter: none !important; }
+    .work-header .site-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    .work-header .site-logo svg { fill: #fff !important; filter: none !important; }
     .work-header nav, .work-header .theme-switch { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.2) !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; }
     .work-header .theme-switch svg { fill: #fff !important; opacity: 0.6; filter: none !important; }
     .work-header .theme-switch .active svg { fill: #fff !important; opacity: 1; filter: none !important; }
@@ -1237,8 +1238,8 @@
     }
 
     /* White header override for Contact page */
-    .header-white .github-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); }
-    .header-white .github-logo svg { fill: #fff !important; }
+    .header-white .site-logo { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.2); }
+    .header-white .site-logo svg { fill: #fff !important; }
     .header-white nav, .header-white .theme-switch { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.2) !important; }
     .header-white nav a { color: #fff !important; text-shadow: none !important; }
     .header-white .theme-switch svg { fill: #fff !important; opacity: 0.6; }
@@ -1288,7 +1289,7 @@
       width: calc(22vh * 0.56);
     }
 
-    .video-grid-item img {
+    .video-grid-item img, .video-grid-item video {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -1296,7 +1297,7 @@
       transition: opacity 0.5s ease;
     }
 
-    .video-grid-item img:hover {
+    .video-grid-item img:hover, .video-grid-item video:hover {
       opacity: 1;
     }
 
@@ -1893,7 +1894,7 @@
           <VenomCursor />
 
           <header className={isContactPage ? "header-white" : ""}>
-            <div className="github-logo"><GithubIcon /></div>
+            <div className="site-logo"></div>
             <nav>
               <a onClick={goToHome} style={{ cursor: 'pointer' }}>HOME</a>
               <a onClick={goToWork} style={{ cursor: 'pointer' }}>WORK</a>
@@ -2023,7 +2024,7 @@
 
           <div className={`work-page ${shutterPhase === 3 || shutterPhase === 4 ? 'active' : ''}`}>
             <header className="work-header">
-                <div className="github-logo"><GithubIcon /></div>
+                <div className="site-logo"></div>
                 <nav>
                   <a onClick={goToHome} style={{ cursor: 'pointer' }}>HOME</a>
                   <a onClick={goToWork} style={{ cursor: 'pointer' }}>WORK</a>
