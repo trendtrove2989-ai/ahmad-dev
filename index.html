@@ -2172,7 +2172,7 @@
       </svg>
     );
 
-    const VideoGrid = () => {
+    const VideoGrid = ({ currentProject }) => {
       const [rows, setRows] = React.useState([]);
 
       React.useEffect(() => {
@@ -2212,7 +2212,9 @@
             <div key={rIdx} className={`video-grid-row ${rIdx % 2 !== 0 ? 'offset' : ''}`}>
               {rowItems.map((item, iIdx) => (
                 <div key={iIdx} className={`video-grid-item ${item.type}`}>
-                  <video src={encodeURI(`/visuals/vedios/${item.src}`)} autoPlay loop muted playsInline />
+                  {currentProject === 0 ? (
+                    <video src={encodeURI(`/visuals/vedios/${item.src}`)} autoPlay loop muted playsInline preload="none" />
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -2786,15 +2788,45 @@ Here is the list of all Ahmad's projects for context:\n`;
 
       const openWorkPage = () => {
         setShutterPhase(2); 
+        
         setTimeout(() => {
           setIsLoading(true);
-          runProgress();
+          
+          // 1. Visually jump the progress bar to 75% to show it is actively working
+          setProgressWidth(75); 
+          
+          // 2. Create an off-screen video to force the browser to buffer the first actual project video
+          const preloaderVideo = document.createElement('video');
+          preloaderVideo.src = encodeURI(`/visuals/vedios/1.webm`);
+          preloaderVideo.preload = "auto";
+          
+          let hasFinished = false;
+          
+          // 3. The function that triggers when the video is actually ready
+          const completeLoading = () => {
+            if (hasFinished) return;
+            hasFinished = true;
+            
+            // Snap progress to 100%
+            setProgressWidth(100); 
+            
+            // Open the shutters after the bar hits 100%
+            setTimeout(() => {
+              setShutterPhase(3); 
+              setIsLoading(false);
+              setTimeout(() => setProgressWidth(0), 400);
+            }, 600);
+          };
+
+          // 4. Wait for the video to buffer enough to play smoothly without stopping
+          preloaderVideo.oncanplaythrough = completeLoading;
+          
+          // 5. Graceful fallback: If the user's network is broken or the video file fails, 
+          // don't trap them forever. Force open after 6 seconds maximum.
+          preloaderVideo.onerror = completeLoading;
+          setTimeout(completeLoading, 6000);
+
         }, 800);
-        setTimeout(() => {
-          setShutterPhase(3); 
-          setIsLoading(false);
-          setTimeout(() => setProgressWidth(0), 400);
-        }, 3800); 
       };
 
       const closeWorkPage = () => {
@@ -3013,7 +3045,7 @@ Here is the list of all Ahmad's projects for context:\n`;
                 >
                   {projectIdx === 0 ? (
                     <>
-                      <VideoGrid />
+                      <VideoGrid currentProject={currentProject} />
 
                       <div className="work-center-content">
                         <h1 className="welcome-text">WELCOME</h1>
@@ -3028,14 +3060,16 @@ Here is the list of all Ahmad's projects for context:\n`;
                     </>
                   ) : (
                     <div className="project-frame">
-                      <video 
-                        src={`/visuals/vedios/${projectIdx}.webm`} 
-                        className="project-img"
-                        autoPlay 
-                        loop 
-                        muted 
-                        playsInline
-                      />
+                      {Math.abs(currentProject - projectIdx) <= 1 ? (
+                        <video 
+                          src={`/visuals/vedios/${projectIdx}.webm`} 
+                          className="project-img"
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline
+                        />
+                      ) : null}
                       <button 
                         className="view-details-btn"
                         onClick={() => openProjectDetail(projectIdx)}
