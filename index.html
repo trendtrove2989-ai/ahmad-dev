@@ -1307,7 +1307,7 @@
       width: calc(22vh * 0.56);
     }
 
-    .video-grid-item img, .video-grid-item video {
+    .video-grid-item img, .video-grid-item video, .video-grid-item canvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -1315,7 +1315,7 @@
       transition: opacity 0.5s ease;
     }
 
-    .video-grid-item img:hover, .video-grid-item video:hover {
+    .video-grid-item img:hover, .video-grid-item video:hover, .video-grid-item canvas:hover {
       opacity: 1;
     }
 
@@ -2172,8 +2172,52 @@
       </svg>
     );
 
+    const GridCanvas = ({ videoSrc, videoElementsRef }) => {
+      const canvasRef = React.useRef(null);
+
+      React.useEffect(() => {
+        let animationFrameId;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        const draw = () => {
+          const video = videoElementsRef.current[videoSrc];
+          if (video && !video.paused && video.readyState >= 2) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
+          animationFrameId = requestAnimationFrame(draw);
+        };
+
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              draw();
+            } else {
+              cancelAnimationFrame(animationFrameId);
+            }
+          },
+          { threshold: 0.01 }
+        );
+
+        observer.observe(canvas);
+
+        return () => {
+          observer.disconnect();
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, [videoSrc, videoElementsRef]);
+
+      return <canvas ref={canvasRef} />;
+    };
+
     const VideoGrid = ({ currentProject }) => {
       const [rows, setRows] = React.useState([]);
+      const videoElementsRef = React.useRef({});
 
       React.useEffect(() => {
         let desktopCounter = 1;
@@ -2206,14 +2250,39 @@
         setRows(generatedRows);
       }, []);
 
+      const uniqueVideos = React.useMemo(() => {
+        const set = new Set();
+        rows.forEach(row => row.forEach(item => set.add(item.src)));
+        return Array.from(set);
+      }, [rows]);
+
       return (
         <div className="video-grid-container">
+          {currentProject === 0 && (
+            <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              {uniqueVideos.map((src) => (
+                <video
+                  key={src}
+                  src={encodeURI(`/visuals/vedios/${src}`)}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  ref={(el) => {
+                    if (el) videoElementsRef.current[src] = el;
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
           {rows.map((rowItems, rIdx) => (
             <div key={rIdx} className={`video-grid-row ${rIdx % 2 !== 0 ? 'offset' : ''}`}>
               {rowItems.map((item, iIdx) => (
                 <div key={iIdx} className={`video-grid-item ${item.type}`}>
                   {currentProject === 0 ? (
-                    <video src={encodeURI(`/visuals/vedios/${item.src}`)} autoPlay loop muted playsInline preload="none" />
+                    <GridCanvas videoSrc={item.src} videoElementsRef={videoElementsRef} />
                   ) : null}
                 </div>
               ))}
@@ -3211,7 +3280,7 @@ Here is the list of all Ahmad's projects for context:\n`;
                     <div className="project-detail-hero">
                       <div className="project-detail-media-wrap">
                         <video 
-                          src={`/visuals/vedios/${activeDetailProject}.webm`} 
+                          src={`/visuals/vedios/${projectNum}.webm`} 
                           autoPlay 
                           loop 
                           muted 
