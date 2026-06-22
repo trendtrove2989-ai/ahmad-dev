@@ -2625,15 +2625,7 @@
         setChatMessages(updatedMsgs);
         setChatLoading(true);
 
-        const currentKey = apiKey || localStorage.getItem('groq_api_key') || '';
-        if (!currentKey) {
-          setChatLoading(false);
-          setChatMessages((prev) => [
-            ...prev,
-            { role: 'system-alert', content: 'Groq API Key is missing. Please enter your API Key at the top of the chat panel to talk to the AI.' }
-          ]);
-          return;
-        }
+        // API Key check removed! The frontend no longer needs to worry about keys.
 
         try {
           // Prepare system prompt
@@ -2690,7 +2682,7 @@ Here is the list of all Ahmad's projects for context:\n`;
           console.error(err);
           setChatMessages((prev) => [
             ...prev,
-            { role: 'system-alert', content: `Error contacting Groq AI: ${err.message}. Please verify your API Key and network connection.` }
+            { role: 'system-alert', content: `System Error: ${err.message}. (Make sure you are running the site via 'wrangler pages dev' so the backend connects!)` }
           ]);
         } finally {
           setChatLoading(false);
@@ -3551,37 +3543,7 @@ Here is the list of all Ahmad's projects for context:\n`;
             </div>
 
             <div className="ai-chat-input-area">
-              <div className="ai-chat-key-toggle" onClick={() => setShowKeyInput(!showKeyInput)}>
-                <svg viewBox="0 0 24 24" style={{ marginRight: '6px' }}><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-                {apiKey ? "API Key Configured (Click to change)" : "Configure Groq API Key"}
-              </div>
-
-              {showKeyInput && (
-                <div className="ai-chat-key-input-area">
-                  <input 
-                    type="password" 
-                    placeholder="Enter Groq API Key"
-                    defaultValue={apiKey}
-                    className="ai-chat-key-input"
-                    id="groq_key_input"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSaveApiKey(e.target.value);
-                      }
-                    }}
-                  />
-                  <button 
-                    className="ai-chat-key-save-btn"
-                    onClick={() => {
-                      const val = document.getElementById('groq_key_input')?.value;
-                      handleSaveApiKey(val || '');
-                    }}
-                  >
-                    SAVE
-                  </button>
-                </div>
-              )}
-
+              {/* Old frontend key inputs deleted for security/cleanliness */}
               <form className="ai-chat-input-wrap" onSubmit={handleSendChatMessage}>
                 <input 
                   type="text" 
