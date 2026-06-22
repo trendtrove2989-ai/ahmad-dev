@@ -2173,87 +2173,50 @@
       </svg>
     );
 
-    
-
-    const VideoGrid = ({ currentProject }) => {
-      const [rows, setRows] = React.useState([]);
-      const videoElementsRef = React.useRef({});
+    const GridCanvas = ({ videoSrc, videoElementsRef }) => {
+      const canvasRef = React.useRef(null);
 
       React.useEffect(() => {
-        let desktopCounter = 1;
-        let mobileCounter = 1;
+        let animationFrameId;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
 
-        const getD = () => {
-          const c = desktopCounter;
-          desktopCounter = desktopCounter >= 15 ? 1 : desktopCounter + 1;
-          return c;
-        };
-
-        const getM = () => {
-          const c = mobileCounter;
-          mobileCounter = mobileCounter >= 5 ? 1 : mobileCounter + 1;
-          return c;
-        };
-
-        const generatedRows = [];
-        // Reduced from 7 rows to 5 rows to save memory
-        for (let r = 0; r < 5; r++) { 
-          const items = [];
-          // Reduced from 14 items per row to 8 items to prevent lagging
-          for (let i = 0; i < 8; i++) { 
-            if ((i + 1) % 3 === 0) {
-              items.push({ type: 'mobile', src: `m${getM()}.webm` });
-            } else {
-              items.push({ type: 'desktop', src: `${getD()}.webm` });
+        const draw = () => {
+          const video = videoElementsRef.current[videoSrc];
+          if (video && !video.paused && video.readyState >= 2) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
             }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           }
-          generatedRows.push(items);
-        }
-        setRows(generatedRows);
-      }, []);
+          animationFrameId = requestAnimationFrame(draw);
+        };
 
-      const uniqueVideos = React.useMemo(() => {
-        const set = new Set();
-        rows.forEach(row => row.forEach(item => set.add(item.src)));
-        return Array.from(set);
-      }, [rows]);
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              draw();
+            } else {
+              cancelAnimationFrame(animationFrameId);
+            }
+          },
+          { threshold: 0.01 }
+        );
 
-      return (
-        <div className="video-grid-container">
-          {currentProject === 0 && (
-            <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-              {uniqueVideos.map((src) => (
-                <video
-                  key={src}
-                  src={encodeURI(`/visuals/vedios/${src}`)}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  ref={(el) => {
-                    if (el) videoElementsRef.current[src] = el;
-                  }}
-                />
-              ))}
-            </div>
-          )}
+        observer.observe(canvas);
 
-          {rows.map((rowItems, rIdx) => (
-            <div key={rIdx} className={`video-grid-row ${rIdx % 2 !== 0 ? 'offset' : ''}`}>
-              {rowItems.map((item, iIdx) => (
-                <div key={iIdx} className={`video-grid-item ${item.type}`}>
-                  {currentProject === 0 ? (
-                    <GridCanvas videoSrc={item.src} videoElementsRef={videoElementsRef} />
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ))}
-          <div className="video-grid-vignette"></div>
-        </div>
-      );
+        return () => {
+          observer.disconnect();
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, [videoSrc, videoElementsRef]);
+
+      return <canvas ref={canvasRef} />;
     };
+
+    
 
     const PROJECT_DETAILS = [
       { 
