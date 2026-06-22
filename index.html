@@ -23,7 +23,7 @@
     }
   </script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <style>
     :root {
       --brand-yellow: #FFC700;
@@ -1308,7 +1308,7 @@
       width: calc(22vh * 0.56);
     }
 
-    .video-grid-item img, .video-grid-item video {
+    .video-grid-item img, .video-grid-item video, .video-grid-item canvas {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -1316,7 +1316,7 @@
       transition: opacity 0.5s ease;
     }
 
-    .video-grid-item img:hover, .video-grid-item video:hover {
+    .video-grid-item img:hover, .video-grid-item video:hover, .video-grid-item canvas:hover {
       opacity: 1;
     }
 
@@ -2146,7 +2146,7 @@
     </filter>
   </svg>
 
-  <script type="text/babel" data-type="module" data-presets="react">
+<script type="text/babel" data-type="module" data-presets="react">
     import React, { useState, useEffect, useRef } from 'react';
     import { createRoot } from 'react-dom/client';
     import { Canvas } from '@react-three/fiber';
@@ -2173,8 +2173,52 @@
       </svg>
     );
 
+    const GridCanvas = ({ videoSrc, videoElementsRef }) => {
+      const canvasRef = React.useRef(null);
+
+      React.useEffect(() => {
+        let animationFrameId;
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        const draw = () => {
+          const video = videoElementsRef.current[videoSrc];
+          if (video && !video.paused && video.readyState >= 2) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
+          animationFrameId = requestAnimationFrame(draw);
+        };
+
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              draw();
+            } else {
+              cancelAnimationFrame(animationFrameId);
+            }
+          },
+          { threshold: 0.01 }
+        );
+
+        observer.observe(canvas);
+
+        return () => {
+          observer.disconnect();
+          cancelAnimationFrame(animationFrameId);
+        };
+      }, [videoSrc, videoElementsRef]);
+
+      return <canvas ref={canvasRef} />;
+    };
+
     const VideoGrid = ({ currentProject }) => {
       const [rows, setRows] = React.useState([]);
+      const videoElementsRef = React.useRef({});
 
       React.useEffect(() => {
         let desktopCounter = 1;
@@ -2193,10 +2237,11 @@
         };
 
         const generatedRows = [];
-        // CHANGED: Loops reduced to 5 rows and 7 items per row (35 total videos)
+        // Reduced from 7 rows to 5 rows to save memory
         for (let r = 0; r < 5; r++) { 
           const items = [];
-          for (let i = 0; i < 7; i++) { 
+          // Reduced from 14 items per row to 8 items to prevent lagging
+          for (let i = 0; i < 8; i++) { 
             if ((i + 1) % 3 === 0) {
               items.push({ type: 'mobile', src: `m${getM()}.webm` });
             } else {
@@ -2208,14 +2253,39 @@
         setRows(generatedRows);
       }, []);
 
+      const uniqueVideos = React.useMemo(() => {
+        const set = new Set();
+        rows.forEach(row => row.forEach(item => set.add(item.src)));
+        return Array.from(set);
+      }, [rows]);
+
       return (
         <div className="video-grid-container">
+          {currentProject === 0 && (
+            <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+              {uniqueVideos.map((src) => (
+                <video
+                  key={src}
+                  src={encodeURI(`/visuals/vedios/${src}`)}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="auto"
+                  ref={(el) => {
+                    if (el) videoElementsRef.current[src] = el;
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
           {rows.map((rowItems, rIdx) => (
             <div key={rIdx} className={`video-grid-row ${rIdx % 2 !== 0 ? 'offset' : ''}`}>
               {rowItems.map((item, iIdx) => (
                 <div key={iIdx} className={`video-grid-item ${item.type}`}>
                   {currentProject === 0 ? (
-                    <video src={encodeURI(`/visuals/vedios/${item.src}`)} autoPlay loop muted playsInline preload="none" />
+                    <GridCanvas videoSrc={item.src} videoElementsRef={videoElementsRef} />
                   ) : null}
                 </div>
               ))}
@@ -2227,16 +2297,96 @@
     };
 
     const PROJECT_DETAILS = [
-      { name: 'Trend Trove', info: 'Trend Trove is a full-stack, glassmorphic e-commerce platform built with Tailwind CSS, Alpine.js, and a comprehensive Firebase backend. A major standout feature of this project is the fully integrated AI Customer Support Assistant. Operating 24/7 from a sleek, animated UI component, the AI agent utilizes custom system context to fetch live inventory data, answer product queries, and safely guide shoppers. Beyond AI, the platform features an interactive 3D product viewer and a complex HTML5 Canvas mockup builder that allows users to upload, resize, and preview custom graphics on dynamically recolored apparel.', objective: 'The primary goal was to revolutionize the standard online shopping experience in Pakistan by merging premium web aesthetics with intelligent, interactive tools. By implementing the AI-driven chatbot, the platform solves the problem of delayed customer support, instantly resolving shopper hesitation to reduce cart abandonment. Furthermore, the 3D viewer and custom-clothing builder tackle the challenge of digital product visualization, empowering users to confidently design and see exactly what they are buying, effectively bridging the gap between online browsing and physical retail.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'AI MAZE GAME', info: 'This project is an Intelligent Multi-Agent Maze Game featuring a custom-built, heuristic-driven AI architecture. Unlike simple implementations, this game engine manages three distinct agents in real-time. The Monster Agent utilizes an optimized A* Search algorithm for intelligent pursuit, while the AI Player Agent employs a custom Minimax algorithm with Alpha-Beta pruning to make strategic, adversarial decisions in a dynamic environment. The game environment is further enhanced with a Constraint Satisfaction Problem (CSP) logic layer to intelligently distribute coins across the board, ensuring a balanced challenge. The frontend is a high-performance, glassmorphic UI built with Three.js and GSAP, featuring a 3D-rotated game board and real-time pathfinding visualization.', objective: 'The objective was to design and implement a complex multi-agent system where independent AI entities interact within a shared environment. By creating a custom Minimax agent (no external API calls) and an A* tracking system, the project demonstrates how classic artificial intelligence concepts—such as state-space search, heuristic evaluation, and constraint propagation—can be directly applied to game design to create an engaging, non-deterministic experience. The final result is a proof-of-concept that highlights the efficiency of local, code-based decision-making in high-pressure, resource-constrained environments.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'work with ease app', info: 'Work With Ease is a centralized productivity dashboard engineered to unify fragmented digital workspaces. Built with HTML, CSS, JavaScript, and a Firebase backend, the platform allows users to run multiple essential web apps—like GitHub, Slack, and Notion—within a single tabbed interface. A core feature of this architecture is the integration of the Gemini AI API, which acts as a smart agent to dynamically search, fetch, and connect new applications. The hub also boasts a real-time task scheduling system with audio alarms, live Gmail API integration for instant email notifications, and a highly responsive, glassmorphic UI featuring 3D flip-card authentication.', objective: 'The primary objective was to eliminate the friction and cognitive load of constant context-switching for developers and digital professionals. By consolidating communication, development, and scheduling tools into one seamless interface, the project solves the problem of cluttered browser workflows. The addition of an AI-driven app assistant and real-time task tracking ensures that users can stay entirely focused on their objectives without leaving the dashboard, resulting in a streamlined, distraction-free environment that maximizes daily productivity.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'RIVENTA HOLDING SYSTEM', info: 'Riventa Enterprises PVT is a robust, enterprise-grade fleet and financial management ecosystem designed to orchestrate complex transportation operations. At its core lies a highly sophisticated, multi-relational Firebase database that serves as the single source of truth for all business logic. This complex backend architecture manages deep interdependencies between stakeholders, including real-time employee attendance tracking, dynamic profit-loss calculations with automated currency conversion (AED to Rs), and an integrated multi-tiered commission distribution system. The platform features an intelligent, permission-based dashboard where admins can manage dynamic task assignment, granular financial ledgers, and automated invoicing, all while maintaining data integrity across split-profile assignments and multi-user performance targets.', objective: 'The objective was to replace inefficient, manual spreadsheet-based tracking with a unified, data-driven digital infrastructure. This system solves the challenge of financial transparency by automating complex calculations—such as split-profile commissions and daily operational expenses—thereby eliminating human error in salary and revenue reporting. By integrating real-time database synchronization with a glassmorphic, user-friendly UI, the project provides a scalable foundation for business growth, allowing management to make informed, data-backed decisions in real-time while ensuring that all stakeholders have access to accurate, up-to-date performance metrics.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'old liquid portfolio', info: 'This portfolio is built as a high-fidelity visual experience, leveraging advanced WebGL and GSAP animations to create a premium, interactive environment. A defining technical feature is the immersive liquid surface background, which renders a physics-based, light-responsive fluid plane that reacts to the viewport, providing a constant sense of motion and organic depth. The architecture centers around a high-performance interactive gallery featuring a sophisticated "Visual Stories" stacking animation and a seamless, custom-built image expansion portal that transitions images from grid thumbnails into full-screen, blurred-glass overlays. With a fully integrated custom email handler using EmailJS and a fluid, responsive UI, the site is designed to function as a tactile showcase for high-end graphic design work.', objective: 'The objective was to create a digital space that transcends the static nature of traditional portfolios by using motion as a narrative tool. By implementing the WebGL liquid background, the goal was to evoke a modern, "premium" feel that reinforces the site\'s high-tech and creative identity. The site solves the common problem of user disengagement by utilizing scroll-triggered animations and fluid transitions, ensuring that the visitor’s journey through the work—from branding posters to technical projects—feels like a cohesive, curated story rather than a simple list of images.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'diabetes analysis', info: 'This project is an End-to-End Diabetes Risk Assessment Engine designed to process, clean, and analyze high-volume health datasets. The backend is powered by a robust Flask API that orchestrates an advanced data pipeline, including handling missing values, capping outliers based on medical thresholds, and reconciling contradictory diagnostic labels. A critical feature of this project is its statistical rigor and bias mitigation; the system employs SMOTE (Synthetic Minority Over-sampling Technique) to address class imbalance, ensuring the model does not suffer from predictive bias toward the majority class. The final intelligence is driven by a Logistic Regression model validated with Stratified K-Fold Cross-Validation, providing users with real-time risk predictions and probabilistic insights via a clean, interactive dashboard.', objective: 'The primary objective was to build a reliable, automated tool for early diabetes risk identification. The system solves the problem of data "noise"—common in health records—by implementing a multi-stage cleaning pipeline that corrects unrealistic medical metrics (e.g., impossible BMI values or infant data anomalies). Furthermore, by deploying this as a web-accessible application, the objective was to democratize access to predictive health insights, allowing users to input their metrics and receive an immediate risk assessment, while simultaneously providing data analysts with deep statistical tools like Kernel Density Estimation (KDE), confidence intervals, and pairwise correlation analysis to explore health trends.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'university management system', info: 'FAST NUCES Premium UMS is a comprehensive, full-stack University Management System designed to handle complex academic hierarchies. The backbone of this application is a highly normalized, relational database architecture that manages intricate many-to-many relationships—specifically between students, departments, instructors, and courses. A primary focus of this project was implementing robust Role-Based Access Control (RBAC), where the interface dynamically reconfigures its UI, API permissions, and navigation based on whether the user is an Admin, Instructor, or Student. The platform features an automated grading pipeline, multi-level enrollment logic, and an advanced transcript engine that dynamically calculates SGPA based on course credits and grade-point conversion.', objective: 'The objective was to build a secure, efficient, and scalable centralized hub that simplifies academic administration. The system addresses the common problem of data silos in university management by creating a unified "single source of truth" for student enrollments, instructor assignments, and exam results. By integrating features like automated transcript generation and dynamic grading systems, the project aims to reduce administrative overhead and provide students with real-time access to their academic progress, effectively automating the lifecycle of a student from enrollment to graduation.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'AI WAMPUS PLAYER', info: 'The Dynamic Wumpus World Logic Agent is an autonomous AI system designed to solve one of the most classic challenges in Artificial Intelligence. Unlike standard game agents that rely on pre-programmed paths, this agent operates using a Knowledge-Based (KB) architecture grounded in Propositional Logic. The project implements a custom Resolution Refutation engine from scratch, allowing the agent to "reason" about its environment—converting sensor percepts (Breeze, Stench) into logical axioms, storing them in a CNF (Conjunctive Normal Form) Knowledge Base, and mathematically proving the safety of cells before making a move. The frontend is a visually immersive simulation built with Three.js and GSAP, providing real-time visualization of the agent\'s internal reasoning process, including a live clause-resolution log and a dynamic grid that reacts to the agent\'s discoveries.', objective: 'The objective was to explore and implement the foundations of symbolic AI by building a rational agent capable of operating under uncertainty. The project addresses the problem of logical inference in a partially observable environment. By developing a custom logic engine that performs proofs of safety, the objective was to demonstrate how an AI can move beyond simple trial-and-error to exhibit "intelligence" via formal deduction. This project bridges the gap between theoretical logic coursework and practical application, providing an interactive environment to test how different hazard dens', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'visualizer for ai algos', info: 'The Multi-Algorithm Pathfinding Visualizer is an interactive, real-time educational engine developed in Python using Pygame and OpenCV. The core objective was to create a "glass-box" view into pathfinding logic, allowing users to contrast the search strategies of six distinct algorithms—ranging from uninformed searches like Breadth-First Search (BFS) and Depth-First Search (DFS) to optimized approaches like Uniform Cost Search (UCS) and memory-efficient variations like Iterative Deepening (IDDFS). The application features an integrated image-processing module that utilizes adaptive thresholding with OpenCV to convert real-world maze images into navigable grid data, providing a tactile, hands-on way to analyze how AI "thinks" across different constraints.', objective: 'The objective was to translate abstract algorithmic theory into a tangible visual experience. By providing a side-by-side performance comparison, the project solves the problem of "black-box" understanding, helping students and engineers visualize why BFS guarantees the shortest path in unweighted graphs while UCS excels in weighted environments. The project underscores the importance of data structure selection (e.g., using heapq for priority queues in UCS vs. deque for queues in BFS) and demonstrates how heuristic and structural constraints drastically alter an agent\'s pathfinding efficiency.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
-      { name: 'paras jewelers', info: 'Paras Jewelers is a digital storefront designed to showcase luxury craftsmanship through a minimal, high-end interface. The platform is supported by a dynamic relational database that manages a complex inventory of fine jewelry, including real-time stock tracking for gold and diamond collections. The backend architecture is built to handle the unique data requirements of a jeweler, such as tracking product purity (karat), metal weight, and intricate design specifications, while providing a seamless user experience. The site features an infinite-scroll marquee for collection previews and an integrated contact workflow to facilitate bespoke customer inquiries, ensuring the digital presence matches the elegance of the physical brand.', objective: 'The objective was to modernize the traditional jewelry retail experience by providing a high-performance digital catalog that emphasizes visual storytelling. The system solves the challenge of inventory visibility by linking the frontend catalog to a structured database, allowing the owners to easily manage their collection without technical overhead. By combining sophisticated typography, parallax hero effects, and a data-backed product management system, the project aims to build trust with customers, provide detailed product specifications (metadata), and create a streamlined channel for high-value client consultations.', github: 'https://github.com', linkedin: 'https://linkedin.com', showVisitSite: true, visitSiteUrl: '#' },
+      { 
+        name: 'Trend Trove', 
+        info: 'Trend Trove is a full-stack, glassmorphic e-commerce platform built with Tailwind CSS, Alpine.js, and a comprehensive Firebase backend. A major standout feature of this project is the fully integrated AI Customer Support Assistant. Operating 24/7 from a sleek, animated UI component, the AI agent utilizes custom system context to fetch live inventory data, answer product queries, and safely guide shoppers. Beyond AI, the platform features an interactive 3D product viewer and a complex HTML5 Canvas mockup builder that allows users to upload, resize, and preview custom graphics on dynamically recolored apparel.', 
+        objective: 'The primary goal was to revolutionize the standard online shopping experience in Pakistan by merging premium web aesthetics with intelligent, interactive tools. By implementing the AI-driven chatbot, the platform solves the problem of delayed customer support, instantly resolving shopper hesitation to reduce cart abandonment. Furthermore, the 3D viewer and custom-clothing builder tackle the challenge of digital product visualization, empowering users to confidently design and see exactly what they are buying, effectively bridging the gap between online browsing and physical retail.', 
+        github: 'https://github.com/trendtrove2989-ai/trend-trove', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_fullstackdeveloper-webengineering-firebase-ugcPost-7472234397690290176-_EEM/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: true, 
+        visitSiteUrl: 'https://trend-trove.pages.dev' 
+      },
+      { 
+        name: 'AI MAZE GAME', 
+        info: 'This project is an Intelligent Multi-Agent Maze Game featuring a custom-built, heuristic-driven AI architecture. Unlike simple implementations, this game engine manages three distinct agents in real-time. The Monster Agent utilizes an optimized A* Search algorithm for intelligent pursuit, while the AI Player Agent employs a custom Minimax algorithm with Alpha-Beta pruning to make strategic, adversarial decisions in a dynamic environment. The game environment is further enhanced with a Constraint Satisfaction Problem (CSP) logic layer to intelligently distribute coins across the board, ensuring a balanced challenge. The frontend is a high-performance, glassmorphic UI built with Three.js and GSAP, featuring a 3D-rotated game board and real-time pathfinding visualization.', 
+        objective: 'The objective was to design and implement a complex multi-agent system where independent AI entities interact within a shared environment. By creating a custom Minimax agent (no external API calls) and an A* tracking system, the project demonstrates how classic artificial intelligence concepts—such as state-space search, heuristic evaluation, and constraint propagation—can be directly applied to game design to create an engaging, non-deterministic experience. The final result is a proof-of-concept that highlights the efficiency of local, code-based decision-making in high-pressure, resource-constrained environments.', 
+        github: 'https://github.com/trendtrove2989-ai/AI-Maze-Game', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_artificialintelligence-machinelearning-webdevelopment-ugcPost-7472635971642015744-AX94/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: false, 
+        visitSiteUrl: '#' 
+      },
+      { 
+        name: 'work with ease app', 
+        info: 'Work With Ease is a centralized productivity dashboard engineered to unify fragmented digital workspaces. Built with HTML, CSS, JavaScript, and a Firebase backend, the platform allows users to run multiple essential web apps—like GitHub, Slack, and Notion—within a single tabbed interface. A core feature of this architecture is the integration of the Gemini AI API, which acts as a smart agent to dynamically search, fetch, and connect new applications. The hub also boasts a real-time task scheduling system with audio alarms, live Gmail API integration for instant email notifications, and a highly responsive, glassmorphic UI featuring 3D flip-card authentication.', 
+        objective: 'The primary objective was to eliminate the friction and cognitive load of constant context-switching for developers and digital professionals. By consolidating communication, development, and scheduling tools into one seamless interface, the project solves the problem of cluttered browser workflows. The addition of an AI-driven app assistant and real-time task tracking ensures that users can stay entirely focused on their objectives without leaving the dashboard, resulting in a streamlined, distraction-free environment that maximizes daily productivity.', 
+        github: 'https://github.com/trendtrove2989-ai/work-with-ease', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_webdevelopment-productivity-ai-ugcPost-7472668487069597697-nMED/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: false, 
+        visitSiteUrl: '#' 
+      },
+      { 
+        name: 'RIVENTA HOLDING SYSTEM', 
+        info: 'Riventa Enterprises PVT is a robust, enterprise-grade fleet and financial management ecosystem designed to orchestrate complex transportation operations. At its core lies a highly sophisticated, multi-relational Firebase database that serves as the single source of truth for all business logic. This complex backend architecture manages deep interdependencies between stakeholders, including real-time employee attendance tracking, dynamic profit-loss calculations with automated currency conversion (AED to Rs), and an integrated multi-tiered commission distribution system. The platform features an intelligent, permission-based dashboard where admins can manage dynamic task assignment, granular financial ledgers, and automated invoicing, all while maintaining data integrity across split-profile assignments and multi-user performance targets.', 
+        objective: 'The objective was to replace inefficient, manual spreadsheet-based tracking with a unified, data-driven digital infrastructure. This system solves the challenge of financial transparency by automating complex calculations—such as split-profile commissions and daily operational expenses—thereby eliminating human error in salary and revenue reporting. By integrating real-time database synchronization with a glassmorphic, user-friendly UI, the project provides a scalable foundation for business growth, allowing management to make informed, data-backed decisions in real-time while ensuring that all stakeholders have access to accurate, up-to-date performance metrics.', 
+        github: 'https://github.com/trendtrove2989-ai/raventa-holdings', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_riventa-enterprises-management-platform-a-ugcPost-7472241004151103488-Drl_/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: true, 
+        visitSiteUrl: 'https://raventa-holdings.pages.dev' 
+      },
+      { 
+        name: 'old liquid portfolio', 
+        info: 'This portfolio is built as a high-fidelity visual experience, leveraging advanced WebGL and GSAP animations to create a premium, interactive environment. A defining technical feature is the immersive liquid surface background, which renders a physics-based, light-responsive fluid plane that reacts to the viewport, providing a constant sense of motion and organic depth. The architecture centers around a high-performance interactive gallery featuring a sophisticated "Visual Stories" stacking animation and a seamless, custom-built image expansion portal that transitions images from grid thumbnails into full-screen, blurred-glass overlays. With a fully integrated custom email handler using EmailJS and a fluid, responsive UI, the site is designed to function as a tactile showcase for high-end graphic design work.', 
+        objective: 'The objective was to create a digital space that transcends the static nature of traditional portfolios by using motion as a narrative tool. By implementing the WebGL liquid background, the goal was to evoke a modern, "premium" feel that reinforces the site\'s high-tech and creative identity. The site solves the common problem of user disengagement by utilizing scroll-triggered animations and fluid transitions, ensuring that the visitor’s journey through the work—from branding posters to technical projects—feels like a cohesive, curated story rather than a simple list of images.', 
+        github: 'https://github.com/trendtrove2989-ai/Ahmad-s-Portfolio', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_webdevelopment-portfolio-uiux-ugcPost-7472672678274072576-4IBN/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: true, 
+        visitSiteUrl: 'https://ahmads-portfolio-2s7.pages.dev' 
+      },
+      { 
+        name: 'diabetes analysis', 
+        info: 'This project is an End-to-End Diabetes Risk Assessment Engine designed to process, clean, and analyze high-volume health datasets. The backend is powered by a robust Flask API that orchestrates an advanced data pipeline, including handling missing values, capping outliers based on medical thresholds, and reconciling contradictory diagnostic labels. A critical feature of this project is its statistical rigor and bias mitigation; the system employs SMOTE (Synthetic Minority Over-sampling Technique) to address class imbalance, ensuring the model does not suffer from predictive bias toward the majority class. The final intelligence is driven by a Logistic Regression model validated with Stratified K-Fold Cross-Validation, providing users with real-time risk predictions and probabilistic insights via a clean, interactive dashboard.', 
+        objective: 'The primary objective was to build a reliable, automated tool for early diabetes risk identification. The system solves the problem of data "noise"—common in health records—by implementing a multi-stage cleaning pipeline that corrects unrealistic medical metrics (e.g., impossible BMI values or infant data anomalies). Furthermore, by deploying this as a web-accessible application, the objective was to democratize access to predictive health insights, allowing users to input their metrics and receive an immediate risk assessment, while simultaneously providing data analysts with deep statistical tools like Kernel Density Estimation (KDE), confidence intervals, and pairwise correlation analysis to explore health trends.', 
+        github: 'https://github.com/trendtrove2989-ai/Diabeties-prediction-model', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_machinelearning-datascience-python-ugcPost-7472720806804983808-0k-b/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: false, 
+        visitSiteUrl: '#' 
+      },
+      { 
+        name: 'university management system', 
+        info: 'FAST NUCES Premium UMS is a comprehensive, full-stack University Management System designed to handle complex academic hierarchies. The backbone of this application is a highly normalized, relational database architecture that manages intricate many-to-many relationships—specifically between students, departments, instructors, and courses. A primary focus of this project was implementing robust Role-Based Access Control (RBAC), where the interface dynamically reconfigures its UI, API permissions, and navigation based on whether the user is an Admin, Instructor, or Student. The platform features an automated grading pipeline, multi-level enrollment logic, and an advanced transcript engine that dynamically calculates SGPA based on course credits and grade-point conversion.', 
+        objective: 'The objective was to build a secure, efficient, and scalable centralized hub that simplifies academic administration. The system addresses the common problem of data silos in university management by creating a unified "single source of truth" for student enrollments, instructor assignments, and exam results. By integrating features like automated transcript generation and dynamic grading systems, the project aims to reduce administrative overhead and provide students with real-time access to their academic progress, effectively automating the lifecycle of a student from enrollment to graduation.', 
+        github: 'https://github.com/trendtrove2989-ai/student_management_system', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_fullstackdevelopment-databasemanagement-sql-ugcPost-7472722594111213568-L4LK/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: true, 
+        visitSiteUrl: 'https://student-management-system-2q8.pages.dev/' 
+      },
+      { 
+        name: 'AI WAMPUS PLAYER', 
+        info: 'The Dynamic Wumpus World Logic Agent is an autonomous AI system designed to solve one of the most classic challenges in Artificial Intelligence. Unlike standard game agents that rely on pre-programmed paths, this agent operates using a Knowledge-Based (KB) architecture grounded in Propositional Logic. The project implements a custom Resolution Refutation engine from scratch, allowing the agent to "reason" about its environment—converting sensor percepts (Breeze, Stench) into logical axioms, storing them in a CNF (Conjunctive Normal Form) Knowledge Base, and mathematically proving the safety of cells before making a move. The frontend is a visually immersive simulation built with Three.js and GSAP, providing real-time visualization of the agent\'s internal reasoning process, including a live clause-resolution log and a dynamic grid that reacts to the agent\'s discoveries.', 
+        objective: 'The objective was to explore and implement the foundations of symbolic AI by building a rational agent capable of operating under uncertainty. The project addresses the problem of logical inference in a partially observable environment. By developing a custom logic engine that performs proofs of safety, the objective was to demonstrate how an AI can move beyond simple trial-and-error to exhibit "intelligence" via formal deduction. This project bridges the gap between theoretical logic coursework and practical application, providing an interactive environment to test how different hazard dens', 
+        github: 'https://github.com/trendtrove2989-ai/wumpus-ai-agent', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_artificialintelligence-machinelearning-webdevelopment-ugcPost-7472723717379334144-V8PJ/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: true, 
+        visitSiteUrl: 'https://wumpus-ai-agent.pages.dev/' 
+      },
+      { 
+        name: 'visualizer for ai algos', 
+        info: 'The Multi-Algorithm Pathfinding Visualizer is an interactive, real-time educational engine developed in Python using Pygame and OpenCV. The core objective was to create a "glass-box" view into pathfinding logic, allowing users to contrast the search strategies of six distinct algorithms—ranging from uninformed searches like Breadth-First Search (BFS) and Depth-First Search (DFS) to optimized approaches like Uniform Cost Search (UCS) and memory-efficient variations like Iterative Deepening (IDDFS). The application features an integrated image-processing module that utilizes adaptive thresholding with OpenCV to convert real-world maze images into navigable grid data, providing a tactile, hands-on way to analyze how AI "thinks" across different constraints.', 
+        objective: 'The objective was to translate abstract algorithmic theory into a tangible visual experience. By providing a side-by-side performance comparison, the project solves the problem of "black-box" understanding, helping students and engineers visualize why BFS guarantees the shortest path in unweighted graphs while UCS excels in weighted environments. The project underscores the importance of data structure selection (e.g., using heapq for priority queues in UCS vs. deque for queues in BFS) and demonstrates how heuristic and structural constraints drastically alter an agent\'s pathfinding efficiency.', 
+        github: 'https://github.com/trendtrove2989-ai/algo-visualizer', 
+        linkedin: 'https://www.linkedin.com/posts/ahmad-farooq-211320349_python-algorithms-datastructures-ugcPost-7429537418980225024-Y5m6/?utm_source=social_share_send&utm_medium=member_desktop_web&rcm=ACoAAFcUFy0BJjlHfa-7oEKSF_A3ZYH1GkiumzA', 
+        showVisitSite: false, 
+        visitSiteUrl: '#' 
+      },
+      { 
+        name: 'paras jewelers', 
+        info: 'Paras Jewelers is a digital storefront designed to showcase luxury craftsmanship through a minimal, high-end interface. The platform is supported by a dynamic relational database that manages a complex inventory of fine jewelry, including real-time stock tracking for gold and diamond collections. The backend architecture is built to handle the unique data requirements of a jeweler, such as tracking product purity (karat), metal weight, and intricate design specifications, while providing a seamless user experience. The site features an infinite-scroll marquee for collection previews and an integrated contact workflow to facilitate bespoke customer inquiries, ensuring the digital presence matches the elegance of the physical brand.', 
+        objective: 'The objective was to modernize the traditional jewelry retail experience by providing a high-performance digital catalog that emphasizes visual storytelling. The system solves the challenge of inventory visibility by linking the frontend catalog to a structured database, allowing the owners to easily manage their collection without technical overhead. By combining sophisticated typography, parallax hero effects, and a data-backed product management system, the project aims to build trust with customers, provide detailed product specifications (metadata), and create a streamlined channel for high-value client consultations.', 
+        github: 'https://github.com', 
+        linkedin: 'https://linkedin.com', 
+        showVisitSite: true, 
+        visitSiteUrl: '#' 
+      },
     ];
 
     const VenomCursor = ({ isDark }) => {
@@ -2352,7 +2502,46 @@
       const [contactShutterPhase, setContactShutterPhase] = useState(0);
       const [isContactPage, setIsContactPage] = useState(false);
       const detailScrollRef = useRef(null);
+// --- CONTACT FORM STATE ---
+      const [contactName, setContactName] = useState('');
+      const [contactEmail, setContactEmail] = useState('');
+      const [contactMsg, setContactMsg] = useState('');
+      const [contactButtonText, setContactButtonText] = useState('Send Message');
 
+      const handleSendEmail = (e) => {
+        e.preventDefault();
+        
+        if (!contactName || !contactEmail || !contactMsg) {
+          alert('Please fill out all fields');
+          return;
+        }
+
+        setContactButtonText('Sending...');
+
+        emailjs.send(
+          'service_ia6xjfs',     
+          'template_c9fpejw',    
+          {
+            from_name: contactName,
+            reply_to: contactEmail,
+            message: contactMsg,
+            to_email: 'ahmadfarooq.dev2989@gmail.com'
+          },
+          'K7T1bsgu_mTgoVH4e'      
+        )
+        .then(() => {
+          setContactButtonText('Sent Successfully! ✓');
+          setContactName('');
+          setContactEmail('');
+          setContactMsg('');
+          setTimeout(() => setContactButtonText('Send Message'), 4000);
+        })
+        .catch((err) => {
+          console.error('EmailJS Error:', err);
+          setContactButtonText('Failed. Try Again');
+          setTimeout(() => setContactButtonText('Send Message'), 3000);
+        });
+      };
       // --- AI CHAT STATE & HANDLERS ---
       const [chatOpen, setChatOpen] = useState(false);
       const [chatMessages, setChatMessages] = useState([]);
@@ -2451,14 +2640,14 @@ Here is the list of all Ahmad's projects for context:\n`;
           systemPrompt += `\nKeep your responses concise, well-structured (use Markdown when helpful, but keep it brief as it's a chat sidebar), and engaging.`;
 
           // Call Groq API
-          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          // We now ask our own Cloudflare function for the answer, not Groq directly.
+          const response = await fetch('/api/chat', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${currentKey}`
+              'Content-Type': 'application/json'
             },
+            // We send the messages to our middleman
             body: JSON.stringify({
-              model: 'llama-3.3-70b-versatile',
               messages: [
                 { role: 'system', content: systemPrompt },
                 ...updatedMsgs.filter(m => m.role === 'user' || m.role === 'assistant').map(m => ({
@@ -2918,7 +3107,14 @@ Here is the list of all Ahmad's projects for context:\n`;
           </div>
 
           <div className={`work-zoom-ui ${isZoomedOut && contactShutterPhase === 0 && !isContactPage ? 'active' : ''}`} style={{ zIndex: 16000 }}>
-            <div className="carousel-arrow left" onClick={handlePrevProject}>
+            <div 
+              className="carousel-arrow left" 
+              onClick={handlePrevProject}
+              style={{ 
+                opacity: currentProject === 0 ? 0 : 1, 
+                pointerEvents: currentProject === 0 ? 'none' : 'auto' 
+              }}
+            >
               <svg viewBox="0 0 24 24"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
             </div>
             
@@ -2991,7 +3187,14 @@ Here is the list of all Ahmad's projects for context:\n`;
               </div>
             </div>
 
-            <div className="carousel-arrow right" onClick={handleNextProject}>
+            <div 
+              className="carousel-arrow right" 
+              onClick={handleNextProject}
+              style={{ 
+                opacity: currentProject === totalProjects - 1 ? 0 : 1, 
+                pointerEvents: currentProject === totalProjects - 1 ? 'none' : 'auto' 
+              }}
+            >
               <svg viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
             </div>
             
@@ -3134,22 +3337,38 @@ Here is the list of all Ahmad's projects for context:\n`;
                    <h2>Contact Us</h2>
                    <p>Move cursor here to talk</p>
                  </div>
-                 <div className="contact-flip-back">
+                 <form className="contact-flip-back" onSubmit={handleSendEmail} style={{ width: '100%' }}>
                    <h2>Send Message</h2>
                    <div className="contact-form-group">
                      <label>Full Name</label>
-                     <input type="text" />
+                     <input 
+                       type="text" 
+                       value={contactName} 
+                       onChange={(e) => setContactName(e.target.value)} 
+                       required 
+                     />
                    </div>
                    <div className="contact-form-group">
                      <label>Email</label>
-                     <input type="email" />
+                     <input 
+                       type="email" 
+                       value={contactEmail} 
+                       onChange={(e) => setContactEmail(e.target.value)} 
+                       required 
+                     />
                    </div>
                    <div className="contact-form-group">
                      <label>Message</label>
-                     <textarea></textarea>
+                     <textarea 
+                       value={contactMsg} 
+                       onChange={(e) => setContactMsg(e.target.value)} 
+                       required
+                     ></textarea>
                    </div>
-                   <button className="glassy-submit-btn">Send Message</button>
-                 </div>
+                   <button type="submit" className="glassy-submit-btn" disabled={contactButtonText === 'Sending...'}>
+                     {contactButtonText}
+                   </button>
+                 </form>
                </div>
              </div>
 
