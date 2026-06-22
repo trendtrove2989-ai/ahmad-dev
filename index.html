@@ -2178,27 +2178,37 @@
 
       React.useEffect(() => {
         let animationFrameId;
+        let lastTime = 0;
+        const fpsInterval = 1000 / 28; // Throttles canvas paint to 28 FPS to save CPU
+
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
 
-        const draw = () => {
-              const video = videoElementsRef.current[videoSrc];
-              // Removed !video.paused so canvases draw the video frame even if the browser suspends playback
-              if (video && video.readyState >= 2) {
-                if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-                  canvas.width = video.videoWidth;
-                  canvas.height = video.videoHeight;
-                }
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-              }
-              animationFrameId = requestAnimationFrame(draw);
-            };
+        const draw = (currentTime) => {
+          animationFrameId = requestAnimationFrame(draw);
+
+          // Calculate time since last frame
+          const elapsed = currentTime - lastTime;
+          if (elapsed < fpsInterval) return; // Drop redundant frames
+          lastTime = currentTime - (elapsed % fpsInterval);
+
+          const video = videoElementsRef.current[videoSrc];
+          
+          // Removed !video.paused so canvases draw even if browser throttles video
+          if (video && video.readyState >= 2) {
+            if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          }
+        };
 
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
-              draw();
+              animationFrameId = requestAnimationFrame(draw);
             } else {
               cancelAnimationFrame(animationFrameId);
             }
@@ -2263,7 +2273,8 @@
       return (
         <div className="video-grid-container">
           {currentProject === 0 && (
-            <div style={{ position: 'absolute', width: '1px', height: '1px', opacity: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+            /* Opacity 0.01 and physical dimensions trick the GPU into staying awake */
+            <div style={{ position: 'absolute', top: 0, left: 0, width: '10px', height: '10px', opacity: 0.01, zIndex: -1000, pointerEvents: 'none', overflow: 'hidden' }}>
               {uniqueVideos.map((src) => (
                 <video
                   key={src}
@@ -2273,8 +2284,12 @@
                   muted
                   playsInline
                   preload="auto"
+                  style={{ width: '50px', height: '50px' }}
                   ref={(el) => {
-                    if (el) videoElementsRef.current[src] = el;
+                    if (el) {
+                      videoElementsRef.current[src] = el;
+                      el.play().catch(() => {}); // Force play to wake up the media decoder
+                    }
                   }}
                 />
               ))}
