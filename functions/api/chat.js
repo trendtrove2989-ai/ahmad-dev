@@ -24,7 +24,7 @@ export async function onRequestPost(context) {
         'Authorization': `Bearer ${env.GROQ_SECRET_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-specdec',
+        model: 'llama-3.3-70b-versatile',
         messages: requestBody.messages
       })
     });
