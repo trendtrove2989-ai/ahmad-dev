@@ -21,11 +21,10 @@ export async function onRequestPost(context) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // This is the magic part: appending your secret key on the backend
         'Authorization': `Bearer ${env.GROQ_SECRET_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'llama-3.3-70b-specdec',
         messages: requestBody.messages
       })
     });
